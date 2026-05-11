@@ -1,0 +1,30 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Creación Independiente — Artes Escénicas</title>
+  <link rel="stylesheet" href="styles.css" />
+
+  <!-- 1. React 18 + ReactDOM 18 -->
+  <script crossorigin src="https://unpkg.com/react@18/umd/react.development.js"></script>
+  <script crossorigin src="https://unpkg.com/react-dom@18/umd/react-dom.development.js"></script>
+
+  <!-- 2. SheetJS (leer Excel) -->
+  <script src="https://cdn.sheetjs.com/xlsx-0.20.3/package/dist/xlsx.full.min.js"></script>
+
+  <!-- 3. Recharts (depende de React) -->
+  <script src="https://unpkg.com/recharts@2.12.7/umd/Recharts.js"></script>
+
+  <!-- 4. Babel standalone (transforma JSX en tiempo real) — siempre el último -->
+  <script src="https://unpkg.com/@babel/standalone/babel.min.js"></script>
+</head>
+<body>
+  <div id="root"></div>
+
+  <!-- utils.js se carga primero: exporta funciones puras sin JSX -->
+  <script type="text/babel" src="utils.js"></script>
+  <!-- app.js se carga después: usa las funciones de utils.js -->
+  <script type="text/babel" src="app.js"></script>
+</body>
+</html>
