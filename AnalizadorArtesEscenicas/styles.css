@@ -286,3 +286,78 @@ h1::after {
   .tabla-analisis tbody td,
   .tabla-analisis thead th { padding: 9px 10px !important; }
 }
+
+/* --- Integración de Gráficos y Toggles --- */
+.seccion-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: 20px;
+}
+
+.toggle-grupo {
+  display: flex;
+  background: var(--gris);
+  padding: 4px;
+  border-radius: 6px;
+  border: 1px solid var(--negro);
+}
+
+.toggle-btn {
+  border: none;
+  background: transparent;
+  padding: 6px 12px;
+  font-family: 'Barlow Condensed', sans-serif;
+  font-weight: 700;
+  text-transform: uppercase;
+  cursor: pointer;
+  border-radius: 4px;
+  font-size: 0.75rem;
+  transition: all 0.2s;
+}
+
+.toggle-btn.activo {
+  background: var(--negro);
+  color: var(--lima);
+}
+
+.estadisticas-bar {
+  display: flex;
+  gap: 12px;
+  margin-bottom: 20px;
+}
+
+.stat-item {
+  flex: 1;
+  background: var(--gris);
+  padding: 10px 15px;
+  border-radius: var(--radius);
+  border-left: 4px solid var(--lima);
+}
+
+.stat-valor {
+  display: block;
+  font-size: 1.2rem;
+  font-weight: 800;
+  color: var(--negro);
+  line-height: 1;
+}
+
+.stat-etiqueta {
+  font-size: 0.65rem;
+  text-transform: uppercase;
+  color: var(--gris-texto);
+  letter-spacing: 0.05em;
+}
+
+.banner-archivo-nuevo {
+  background: var(--lima);
+  padding: 15px 25px;
+  border-radius: var(--radius);
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: 30px;
+  border: 2px solid var(--negro);
+}
+

@@ -1,155 +1,116 @@
 const { useState } = React;
 
-/**
- * Función auxiliar para calcular N y % de una columna específica.
- * Busca de forma flexible el nombre de la cabecera en el JSON del Excel.
- */
-function calcularFrecuencias(filas, palabrasClave) {
-  if (!filas || !filas.length) return [];
-
-  const conteos = {};
-  let total = 0;
-
-  filas.forEach((fila) => {
-    // Encuentra la clave real en el objeto que coincida con las palabras buscadas
-    const claveEncontrada = Object.keys(fila).find((key) =>
-      palabrasClave.some((palabra) => key.toLowerCase().includes(palabra.toLowerCase()))
-    );
-
-    let valor = claveEncontrada && fila[claveEncontrada] !== undefined 
-      ? String(fila[claveEncontrada]).trim() 
-      : "Sin especificar";
-
-    if (valor === "") valor = "Sin especificar";
-
-    conteos[valor] = (conteos[valor] || 0) + 1;
-    total++;
-  });
-
-  // Mapeamos el resultado al formato esperado por la tabla y ordenamos de mayor a menor
-  return Object.keys(conteos)
-    .map((categoria) => ({
-      categoria,
-      n: conteos[categoria],
-      porcentaje: total > 0 ? ((conteos[categoria] / total) * 100).toFixed(1) : 0,
-    }))
-    .sort((a, b) => b.n - a.n);
-}
-
-// 1. Componente TablaAnalisis
-function TablaAnalisis({ datos }) {
-  if (!datos || datos.length === 0) {
-    return <p className="sin-datos">No se encontraron datos para esta columna.</p>;
-  }
-
-  return (
-    <table className="tabla-analisis" border="1" cellPadding="8" style={{ borderCollapse: "collapse", width: "100%", marginTop: "10px" }}>
-      <thead>
-        <tr style={{ backgroundColor: "#f2f2f2", textAlign: "left" }}>
-          <th>Categoría</th>
-          <th>N</th>
-          <th>%</th>
-        </tr>
-      </thead>
-      <tbody>
-        {datos.map((fila, index) => (
-          <tr key={index}>
-            <td>{fila.categoria}</td>
-            <td>{fila.n}</td>
-            <td>{fila.porcentaje}%</td>
-          </tr>
-        ))}
-      </tbody>
-    </table>
-  );
-}
-
-// 2. Componente SeccionAnalisis
-function SeccionAnalisis({ titulo, datos }) {
-  return (
-    <div className="seccion-analisis" style={{ marginBottom: "30px" }}>
-      <h2 style={{ borderBottom: "2px solid #ccc", paddingBottom: "5px" }}>{titulo}</h2>
-      <TablaAnalisis datos={datos} />
-    </div>
-  );
-}
-
-// 3. Componente Principal App
 function App() {
   const [filas, setFilas] = useState(null);
   const [nombreArchivo, setNombreArchivo] = useState("");
-  const [error, setError] = useState("");
   const [cargando, setCargando] = useState(false);
+
+  if (!window.Recharts) return <div className="estado">Cargando librerías...</div>;
+
+  const { BarChart, Bar, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer, Cell, LabelList } = window.Recharts;
+
+  const LIMA = "#C9E02A";
+  const NEGRO = "#0D0D0D";
+
+  const calcularFrecuencias = (data, palabrasClave) => {
+    if (!data || !data.length) return [];
+    const conteos = {};
+    let total = 0;
+    data.forEach(fila => {
+      const clave = Object.keys(fila).find(k => palabrasClave.some(p => k.toLowerCase().includes(p.toLowerCase())));
+      let valor = clave && fila[clave] ? String(fila[clave]).trim() : "Sin especificar";
+      conteos[valor] = (conteos[valor] || 0) + 1;
+      total++;
+    });
+    return Object.keys(conteos).map(cat => ({
+      categoria: cat,
+      n: conteos[cat],
+      porcentaje: parseFloat(((conteos[cat] / total) * 100).toFixed(1))
+    })).sort((a, b) => b.n - a.n);
+  };
+
+  const SeccionAnalisis = ({ titulo, datos }) => {
+    const [vista, setVista] = useState("tabla");
+    const valoresN = datos.map(d => d.n);
+    const promedio = (valoresN.reduce((a, b) => a + b, 0) / datos.length || 0).toFixed(1);
+
+    return (
+      <div className="seccion-analisis">
+        <div className="seccion-header">
+          <h2>{titulo}</h2>
+          <div className="toggle-grupo">
+            <button className={`toggle-btn ${vista === 'tabla' ? 'activo' : ''}`} onClick={() => setVista("tabla")}>Tabla</button>
+            <button className={`toggle-btn ${vista === 'grafico' ? 'activo' : ''}`} onClick={() => setVista("grafico")}>Gráfico</button>
+          </div>
+        </div>
+
+        <div className="estadisticas-bar">
+          <div className="stat-item">
+            <span className="stat-valor">{datos.length}</span>
+            <span className="stat-etiqueta">Categorías</span>
+          </div>
+          <div className="stat-item">
+            <span className="stat-valor">{promedio}</span>
+            <span className="stat-etiqueta">Promedio N</span>
+          </div>
+        </div>
+
+        {vista === "tabla" ? (
+          <table className="tabla-analisis">
+            <thead><tr><th>Categoría</th><th>N</th><th>%</th></tr></thead>
+            <tbody>
+              {datos.map((d, i) => (
+                <tr key={i}><td>{d.categoria}</td><td>{d.n}</td><td>{d.porcentaje}%</td></tr>
+              ))}
+            </tbody>
+          </table>
+        ) : (
+          <div style={{ width: '100%', height: Math.max(300, datos.length * 35), marginTop: '20px' }}>
+            <ResponsiveContainer>
+              <BarChart layout="vertical" data={datos.slice(0, 15)} margin={{ left: 20, right: 40 }}>
+                <CartesianGrid strokeDasharray="3 3" horizontal={false} stroke="#e0e0e0" />
+                <XAxis type="number" hide domain={[0, 100]} />
+                <YAxis dataKey="categoria" type="category" width={140} tick={{ fontSize: 11, fill: NEGRO }} axisLine={false} />
+                <Tooltip cursor={{ fill: 'rgba(201,224,42,0.1)' }} />
+                <Bar dataKey="porcentaje" fill={NEGRO} radius={[0, 4, 4, 0]} barSize={20}>
+                  {datos.map((_, i) => <Cell key={i} fill={i === 0 ? LIMA : NEGRO} />)}
+                  <LabelList dataKey="porcentaje" position="right" formatter={v => `${v}%`} style={{ fontSize: 11, fontWeight: 'bold', fill: NEGRO }} />
+                </Bar>
+              </BarChart>
+            </ResponsiveContainer>
+          </div>
+        )}
+      </div>
+    );
+  };
 
   async function handleArchivo(e) {
     const file = e.target.files[0];
     if (!file) return;
-
     setNombreArchivo(file.name);
-    setError("");
-    setFilas(null);
     setCargando(true);
-
     try {
-      // Se asume que leerExcel(file) está definido globalmente en otro script
-      const datos = await leerExcel(file);
-      setFilas(datos);
-    } catch (err) {
-      setError("No se pudo leer el archivo: " + err.message);
-    } finally {
-      setCargando(false);
-    }
+      const data = await leerExcel(file);
+      setFilas(data);
+    } catch (err) { alert("Error al leer el archivo"); }
+    finally { setCargando(false); }
   }
 
   return (
-    <div className="contenedor" style={{ maxWidth: "800px", margin: "0 auto", padding: "20px" }}>
+    <div className="contenedor">
       <h1>Creación Independiente — Artes Escénicas</h1>
-
-      <label className="label-archivo" style={{ display: "block", marginBottom: "20px" }}>
-        Selecciona un Excel (.xlsx / .xls)
-        <input
-          type="file"
-          accept=".xlsx,.xls"
-          onChange={handleArchivo}
-          style={{ marginLeft: "10px" }}
-        />
-      </label>
-
-      {cargando && <p className="estado">Leyendo archivo…</p>}
-
-      {error && <p className="error" style={{ color: "red" }}>{error}</p>}
-
-      {filas !== null && !cargando && (
+      <label className="label-archivo"> Seleccionar Excel <input type="file" accept=".xlsx,.xls" onChange={handleArchivo} style={{ display: 'none' }} /></label>
+      {cargando && <p className="estado">Analizando...</p>}
+      {filas && (
         <div className="resultado">
-          <div style={{ backgroundColor: "#eef", padding: "10px", borderRadius: "5px", marginBottom: "30px" }}>
-            <p className="nombre-archivo" style={{ margin: 0, fontWeight: "bold" }}>{nombreArchivo}</p>
-            <p className="contador-filas" style={{ margin: 0 }}>
-              <span className="num-filas">{filas.length}</span>{" "}
-              <span className="etiqueta-filas">
-                {filas.length === 1 ? "fila leída" : "filas leídas"}
-              </span>
-            </p>
+          <div className="banner-archivo-nuevo">
+            <span className="nombre-archivo">{nombreArchivo}</span>
+            <span className="contador-filas"><strong>{filas.length}</strong> registros leídos</span>
           </div>
-
-          {/* 4. Renderizado de las 4 secciones solicitadas */}
-          <div className="analisis-secciones">
-            <SeccionAnalisis
-              titulo="Asociaciones"
-              datos={calcularFrecuencias(filas, ["asociacion", "asociación", "asoc"])}
-            />
-            <SeccionAnalisis
-              titulo="Formas Jurídicas"
-              datos={calcularFrecuencias(filas, ["forma juridica", "forma jurídica", "juridica", "jurídica"])}
-            />
-            <SeccionAnalisis
-              titulo="Comunidades Autónomas (CCAA)"
-              datos={calcularFrecuencias(filas, ["ccaa", "comunidad", "autonoma", "autónoma"])}
-            />
-            <SeccionAnalisis
-              titulo="Género"
-              datos={calcularFrecuencias(filas, ["genero", "género", "sexo"])}
-            />
-          </div>
+          <SeccionAnalisis titulo="Asociaciones" datos={calcularFrecuencias(filas, ["asociacion", "asoc"])} />
+          <SeccionAnalisis titulo="Formas Jurídicas" datos={calcularFrecuencias(filas, ["forma", "juridica"])} />
+          <SeccionAnalisis titulo="CCAA" datos={calcularFrecuencias(filas, ["ccaa", "comunidad"])} />
+          <SeccionAnalisis titulo="Género" datos={calcularFrecuencias(filas, ["genero", "sexo"])} />
         </div>
       )}
     </div>
@@ -158,3 +119,4 @@ function App() {
 
 const root = ReactDOM.createRoot(document.getElementById("root"));
 root.render(<App />);
+
