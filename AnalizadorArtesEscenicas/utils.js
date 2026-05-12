@@ -32,7 +32,9 @@ function leerExcel(file) {
     reader.readAsArrayBuffer(file);
   });
 }
-
+// Analiza una columna del Excel y devuelve cuántas veces aparece
+// cada valor y qué porcentaje representa sobre el total.
+// Ejemplo: contarPorCampo(datos, 'Genero') → [{nombre:'Danza', cantidad:45, porcentaje:'32.1'}, ...]
 function contarPorCampo(datos, columna) {
   const total   = datos.length
   const conteos = {}
@@ -54,6 +56,11 @@ function contarPorCampo(datos, columna) {
     return b.cantidad - a.cantidad
   })
 }
+
+
+// Extrae el año de un campo de fecha del Excel.
+// Funciona tanto si el valor es "2018" como "01/03/2018" o "2018-03-01".
+// Devuelve null si no encuentra ningún año válido.
 function extraerAnio(valor) {
   if (!valor) return null
   const texto = String(valor).trim()
@@ -65,6 +72,11 @@ function extraerAnio(valor) {
 
   return null
 }
+
+
+// Calcula la mediana de un array de números.
+// La mediana es el valor central cuando los números están ordenados.
+// Si hay cantidad par de elementos, devuelve la media de los dos centrales.
 function calcularMediana(array) {
   const ordenado = [...array].sort(function(a, b) { return a - b })
   const mitad    = Math.floor(ordenado.length / 2)
@@ -76,6 +88,11 @@ function calcularMediana(array) {
   }
 }
 
+
+// Analiza una columna numérica del Excel agrupando los valores en rangos.
+// fnRango es la función que decide en qué rango cae cada número
+// (rangoInterpretes, rangoDuracion, rangoCoste o rangoCache).
+// Ejemplo: contarPorRango(datos, 'Duracion', rangoDuracion)
 function contarPorRango(datos, columna, fnRango) {
   const total   = datos.length
   const conteos = {}
@@ -99,6 +116,8 @@ function contarPorRango(datos, columna, fnRango) {
   })
 }
 
+
+// Devuelve el rango de tamaño del elenco según el número de intérpretes.
 function rangoInterpretes(n) {
   if (n === 1)  return 'Solo (1)'
   if (n === 2)  return 'Duo (2)'
@@ -108,6 +127,7 @@ function rangoInterpretes(n) {
   return 'Muy grande (+20)'
 }
 
+// Devuelve el rango de duración en minutos de un espectáculo.
 function rangoDuracion(n) {
   if (n <= 30)  return 'Menos de 30 min'
   if (n <= 45)  return '31 a 45 min'
@@ -115,6 +135,7 @@ function rangoDuracion(n) {
   return 'Mas de 60 min'
 }
 
+// Devuelve el rango del coste de producción en euros.
 function rangoCoste(n) {
   if (n <= 5000)  return 'Menos de 5.000'
   if (n <= 10000) return '5.001 a 10.000'
@@ -125,6 +146,7 @@ function rangoCoste(n) {
   return 'Mas de 75.000'
 }
 
+// Devuelve el rango del caché del espectáculo (precio por función) en euros.
 function rangoCache(n) {
   if (n <= 500)   return 'Menos de 500'
   if (n <= 1500)  return '501 a 1.500'
