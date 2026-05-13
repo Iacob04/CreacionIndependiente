@@ -1,363 +1,200 @@
+@import url('https://fonts.googleapis.com/css2?family=Barlow+Condensed:wght@700;800&family=Barlow:wght@400;500;600&display=swap');
 
- 
-@import url('https://fonts.googleapis.com/css2?family=Barlow+Condensed:wght@700;800;900&family=Barlow:wght@300;400;500&display=swap');
- 
-/* ── Variables ─────────────────────────────────────────── */
 :root {
-  --lima:        #C9E02A;
-  --lima-dark:   #a8bc1a;
-  --lima-dim:    rgba(201,224,42,.15);
-  --negro:       #0D0D0D;
-  --negro-soft:  #1A1A1A;
-  --blanco:      #FFFFFF;
-  --gris:        #f4f4f4;
-  --gris-borde:  #e0e0e0;
-  --gris-texto:  #555555;
-  --shadow:      0 4px 24px rgba(0,0,0,.10);
-  --radius:      8px;
+  --lima: #C9E02A;
+  --negro: #0D0D0D;
+  --blanco: #FFFFFF;
+  --gris-claro: #F8F9FA;
+  --gris-borde: #E9ECEF;
+  --sombra: 0 4px 15px rgba(0, 0, 0, 0.05);
+  --header-height: 70px;
 }
- 
-/* ── Reset / Base ──────────────────────────────────────── */
-*, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
- 
+
+/* --- Base y Layout --- */
 body {
   font-family: 'Barlow', sans-serif;
-  font-weight: 400;
-  background-color: var(--blanco);
-  color: var(--negro-soft);
-  min-height: 100vh;
-  padding: 0 0 60px;
-  line-height: 1.6;
-}
- 
-/* ── Contenedor principal ──────────────────────────────── */
-.contenedor {
-  max-width: 860px !important;
-  margin: 0 auto !important;
-  padding: 48px 32px !important;
-}
- 
-/* ── Título H1 ─────────────────────────────────────────── */
-h1 {
-  font-family: 'Barlow Condensed', sans-serif;
-  font-size: clamp(2rem, 5vw, 3.2rem);
-  font-weight: 900;
-  text-transform: uppercase;
-  letter-spacing: -0.01em;
+  background-color: var(--gris-claro);
   color: var(--negro);
-  margin-bottom: 36px;
-  line-height: 1.05;
-}
- 
-h1::after {
-  content: '';
-  display: block;
-  width: 48px;
-  height: 4px;
-  background: var(--lima);
-  margin-top: 14px;
-  border-radius: 2px;
-}
- 
-/* ── Input de archivo ──────────────────────────────────── */
-.label-archivo {
-  display: inline-flex !important;
-  align-items: center;
-  gap: 14px;
-  background: var(--negro);
-  border: 2px solid var(--negro);
-  border-radius: var(--radius);
-  padding: 13px 22px;
-  cursor: pointer;
-  font-family: 'Barlow Condensed', sans-serif;
-  font-weight: 700;
-  font-size: 0.95rem;
-  text-transform: uppercase;
-  letter-spacing: .05em;
-  color: var(--lima);
-  transition: background .18s, color .18s;
-  margin-bottom: 36px !important;
-}
- 
-.label-archivo:hover {
-  background: var(--lima);
-  color: var(--negro);
-  border-color: var(--lima);
-}
- 
-.label-archivo input[type="file"] {
-  font-family: 'Barlow', sans-serif;
-  font-size: 0.85rem;
-  color: inherit;
-  background: none;
-  border: none;
-  outline: none;
-  cursor: pointer;
-  margin-left: 0 !important;
-}
- 
-/* ── Estado / Error ────────────────────────────────────── */
-.estado {
-  color: var(--gris-texto);
-  font-size: 0.88rem;
-  padding: 12px 18px;
-  background: var(--gris);
-  border-radius: 6px;
-  border-left: 4px solid var(--lima);
-}
- 
-.error {
-  color: #cc2200 !important;
-  font-size: 0.88rem;
-  padding: 12px 18px;
-  background: #fff0ee;
-  border-radius: 6px;
-  border-left: 4px solid #cc2200;
-}
- 
-/* ── Banner del archivo cargado ────────────────────────── */
-.resultado > div:first-child {
-  background: var(--lima) !important;
-  border: none !important;
-  border-radius: var(--radius) !important;
-  padding: 16px 24px !important;
-  margin-bottom: 40px !important;
-  display: flex !important;
-  align-items: center;
-  gap: 20px;
-}
- 
-.nombre-archivo {
-  font-family: 'Barlow Condensed', sans-serif;
-  font-weight: 800;
-  font-size: 1.05rem;
-  text-transform: uppercase;
-  letter-spacing: .02em;
-  color: var(--negro) !important;
-}
- 
-.contador-filas {
-  font-size: 0.85rem;
-  color: var(--negro-soft) !important;
-}
- 
-.num-filas {
-  font-weight: 700;
-  color: var(--negro);
-}
- 
-/* ── Secciones de análisis ─────────────────────────────── */
-.seccion-analisis {
-  background: var(--blanco);
-  border: 2px solid var(--negro);
-  border-radius: var(--radius);
-  padding: 28px 30px;
-  margin-bottom: 20px !important;
-  box-shadow: 4px 4px 0px var(--negro);
-  transition: transform .15s, box-shadow .15s;
-  animation: fadeUp .3s ease both;
-}
- 
-.seccion-analisis:hover {
-  transform: translate(-2px, -2px);
-  box-shadow: 6px 6px 0px var(--negro);
-}
- 
-@keyframes fadeUp {
-  from { opacity: 0; transform: translateY(14px); }
-  to   { opacity: 1; transform: translateY(0); }
-}
- 
-.seccion-analisis:nth-child(1) { animation-delay: .05s; }
-.seccion-analisis:nth-child(2) { animation-delay: .12s; }
-.seccion-analisis:nth-child(3) { animation-delay: .19s; }
-.seccion-analisis:nth-child(4) { animation-delay: .26s; }
- 
-/* ── Títulos H2 ────────────────────────────────────────── */
-.seccion-analisis h2 {
-  font-family: 'Barlow Condensed', sans-serif;
-  font-weight: 900;
-  font-size: 1.35rem;
-  text-transform: uppercase;
-  letter-spacing: .03em;
-  color: var(--negro);
-  border-bottom: 2px solid var(--negro) !important;
-  padding-bottom: 12px !important;
-  margin-bottom: 18px;
-}
- 
-/* ── Tabla ─────────────────────────────────────────────── */
-.tabla-analisis {
-  width: 100% !important;
-  border-collapse: collapse !important;
-  margin-top: 6px !important;
-  font-size: 0.875rem;
-  border: none !important;
-}
- 
-/* Cabecera */
-.tabla-analisis thead tr {
-  background: var(--negro) !important;
-}
- 
-.tabla-analisis thead th {
-  padding: 10px 14px !important;
-  text-align: left !important;
-  font-family: 'Barlow Condensed', sans-serif;
-  font-weight: 700;
-  font-size: 0.78rem;
-  text-transform: uppercase;
-  letter-spacing: .1em;
-  color: var(--lima) !important;
-  border: none !important;
-}
- 
-.tabla-analisis thead th:first-child { border-radius: 4px 0 0 4px; }
-.tabla-analisis thead th:last-child  { border-radius: 0 4px 4px 0; }
- 
-.tabla-analisis thead th:nth-child(2),
-.tabla-analisis thead th:nth-child(3) {
-  text-align: right !important;
-  width: 72px;
-}
- 
-/* Filas */
-.tabla-analisis tbody tr {
-  border-bottom: 1px solid var(--gris-borde) !important;
-  transition: background .12s;
-}
- 
-.tabla-analisis tbody tr:last-child {
-  border-bottom: none !important;
-}
- 
-.tabla-analisis tbody tr:hover {
-  background: var(--lima-dim) !important;
-}
- 
-.tabla-analisis tbody td {
-  padding: 11px 14px !important;
-  border: none !important;
-  vertical-align: middle;
-  color: var(--negro-soft);
-}
- 
-/* N y % alineados a la derecha */
-.tabla-analisis tbody td:nth-child(2),
-.tabla-analisis tbody td:nth-child(3) {
-  text-align: right !important;
-  font-variant-numeric: tabular-nums;
-}
- 
-/* N en negrita */
-.tabla-analisis tbody td:nth-child(2) {
-  font-weight: 600;
-  color: var(--negro);
-}
- 
-/* % en negrita */
-.tabla-analisis tbody td:nth-child(3) {
-  font-weight: 700;
-  color: var(--negro);
-}
- 
-/* Primera fila destacada con fondo lima tenue */
-.tabla-analisis tbody tr:first-child {
-  background: var(--lima-dim);
-}
- 
-.tabla-analisis tbody tr:first-child td:first-child {
-  font-weight: 600;
-}
- 
-/* ── Sin datos ─────────────────────────────────────────── */
-.sin-datos {
-  color: var(--gris-texto);
-  font-size: 0.85rem;
-  font-style: italic;
-  padding: 10px 0;
-}
- 
-/* ── Responsive ────────────────────────────────────────── */
-@media (max-width: 600px) {
-  .contenedor { padding: 28px 16px !important; }
-  .seccion-analisis { padding: 20px 18px; }
-  .tabla-analisis { font-size: 0.82rem; }
-  .tabla-analisis tbody td,
-  .tabla-analisis thead th { padding: 9px 10px !important; }
+  margin: 0;
+  padding-top: var(--header-height); /* Espacio para el header fijo */
 }
 
-/* --- Integración de Gráficos y Toggles --- */
+.contenedor {
+  max-width: 1000px;
+  margin: 40px auto;
+  padding: 0 20px;
+}
+
+/* --- Cabecera Fija --- */
+.header-fijo {
+  position: fixed;
+  top: 0;
+  left: 0;
+  width: 100%;
+  height: var(--header-height);
+  background: var(--negro);
+  color: var(--lima);
+  display: flex;
+  align-items: center;
+  padding: 0 30px;
+  z-index: 1000;
+  box-shadow: 0 2px 10px rgba(0,0,0,0.2);
+}
+
+.header-fijo h1 {
+  font-family: 'Barlow Condensed', sans-serif;
+  font-size: 1.4rem;
+  text-transform: uppercase;
+  margin: 0;
+  letter-spacing: 1px;
+}
+
+/* --- Tarjetas de Sección --- */
+.seccion-analisis {
+  background: var(--blanco);
+  border-radius: 12px;
+  padding: 25px;
+  margin-bottom: 30px;
+  border: 1px solid var(--gris-borde);
+  box-shadow: var(--sombra);
+}
+
 .seccion-header {
   display: flex;
   justify-content: space-between;
   align-items: center;
-  margin-bottom: 20px;
+  margin-bottom: 25px;
+  border-bottom: 2px solid var(--gris-claro);
+  padding-bottom: 15px;
 }
 
+.seccion-header h2 {
+  font-family: 'Barlow Condensed', sans-serif;
+  font-size: 1.6rem;
+  margin: 0;
+}
+
+/* --- Botones Toggle --- */
 .toggle-grupo {
   display: flex;
-  background: var(--gris);
-  padding: 4px;
-  border-radius: 6px;
-  border: 1px solid var(--negro);
+  background: var(--gris-claro);
+  padding: 5px;
+  border-radius: 10px;
+  border: 1px solid var(--gris-borde);
 }
 
 .toggle-btn {
   border: none;
   background: transparent;
-  padding: 6px 12px;
-  font-family: 'Barlow Condensed', sans-serif;
-  font-weight: 700;
-  text-transform: uppercase;
+  padding: 8px 18px;
+  font-weight: 600;
+  font-size: 0.85rem;
   cursor: pointer;
-  border-radius: 4px;
-  font-size: 0.75rem;
-  transition: all 0.2s;
+  border-radius: 7px;
+  transition: all 0.3s ease;
+  color: #666;
 }
 
 .toggle-btn.activo {
   background: var(--negro);
   color: var(--lima);
+  box-shadow: 0 2px 5px rgba(0,0,0,0.1);
 }
 
+/* --- Tablas Estilizadas --- */
+.tabla-analisis {
+  width: 100%;
+  border-collapse: collapse;
+  margin-top: 10px;
+  font-size: 0.95rem;
+}
+
+.tabla-analisis thead th {
+  background: var(--negro);
+  color: var(--blanco);
+  text-align: left;
+  padding: 12px 15px;
+  font-weight: 500;
+  text-transform: uppercase;
+  font-size: 0.8rem;
+}
+
+.tabla-analisis tbody td {
+  padding: 12px 15px;
+  border-bottom: 1px solid var(--gris-borde);
+}
+
+.tabla-analisis tbody tr:nth-child(even) {
+  background-color: var(--gris-claro);
+}
+
+.tabla-analisis tbody tr:hover {
+  background-color: rgba(201, 224, 42, 0.1);
+  transition: background 0.2s;
+}
+
+/* --- Estadísticas --- */
 .estadisticas-bar {
-  display: flex;
-  gap: 12px;
-  margin-bottom: 20px;
+  display: grid;
+  grid-template-columns: repeat(3, 1fr);
+  gap: 15px;
+  margin-bottom: 25px;
 }
 
 .stat-item {
-  flex: 1;
-  background: var(--gris);
-  padding: 10px 15px;
-  border-radius: var(--radius);
-  border-left: 4px solid var(--lima);
+  background: var(--gris-claro);
+  padding: 15px;
+  border-radius: 10px;
+  text-align: center;
 }
 
 .stat-valor {
   display: block;
-  font-size: 1.2rem;
+  font-size: 1.5rem;
   font-weight: 800;
   color: var(--negro);
-  line-height: 1;
 }
 
 .stat-etiqueta {
-  font-size: 0.65rem;
+  font-size: 0.75rem;
+  color: #777;
   text-transform: uppercase;
-  color: var(--gris-texto);
-  letter-spacing: 0.05em;
+  font-weight: 600;
 }
 
-.banner-archivo-nuevo {
+/* --- Input de Archivo --- */
+.label-archivo {
+  display: inline-block;
   background: var(--lima);
-  padding: 15px 25px;
-  border-radius: var(--radius);
-  display: flex;
-  justify-content: space-between;
-  align-items: center;
-  margin-bottom: 30px;
+  color: var(--negro);
+  padding: 12px 25px;
+  border-radius: 8px;
+  font-weight: 700;
+  cursor: pointer;
   border: 2px solid var(--negro);
+  transition: transform 0.2s;
 }
 
+.label-archivo:hover {
+  transform: translateY(-2px);
+}
+
+/* --- Adaptación Móvil (Responsive) --- */
+@media (max-width: 600px) {
+  .header-fijo h1 { font-size: 1.1rem; }
+  
+  .estadisticas-bar {
+    grid-template-columns: 1fr;
+  }
+  
+  .seccion-header {
+    flex-direction: column;
+    align-items: flex-start;
+    gap: 15px;
+  }
+  
+  .tabla-analisis {
+    display: block;
+    overflow-x: auto; /* Permite scroll horizontal en tablas muy anchas */
+  }
+}
