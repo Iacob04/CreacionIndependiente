@@ -3,7 +3,7 @@
  * Cada elemento representa una fila; las claves son los nombres de columna
  * tomados de la primera fila del archivo.
  *
- * @param {File} file  Objeto File obtenido de un <input type="file">
+  @param {File} file 
  * @returns {Promise<Object[]>}
  */
 function leerExcel(file) {
@@ -157,4 +157,95 @@ function rangoCache(n) {
   if (n <= 15000) return '10.001 a 15.000'
   if (n <= 20000) return '15.001 a 20.000'
   return 'Mas de 20.000'
+}
+// Analiza las redes sociales de las compañías.
+// Devuelve dos tablas: cuántas redes tiene cada compañía
+// y cuántas compañías tienen cada red social.
+function analizarRedes(datos) {
+  const total     = datos.length
+  const porRed    = {}  // cuántas empresas tienen cada red
+  const porNumero = {}  // cuántas redes tiene cada empresa
+
+  datos.forEach(function(fila) {
+    let redesDeEstaEmpresa = 0
+
+    for (let i = 1; i <= 6; i++) {
+      const columna = 'Redes sociales ' + i + ' red'
+      const valor   = String(fila[columna] || '').trim()
+
+      if (valor && valor !== 'Sin datos') {
+        redesDeEstaEmpresa++
+        porRed[valor] = (porRed[valor] || 0) + 1
+      }
+    }
+
+    porNumero[redesDeEstaEmpresa] = (porNumero[redesDeEstaEmpresa] || 0) + 1
+  })
+
+  const tablaPorRed = Object.entries(porRed)
+    .map(function(e) {
+      return {
+        nombre:     e[0],
+        cantidad:   e[1],
+        porcentaje: ((e[1] / total) * 100).toFixed(1)
+      }
+    })
+    .sort(function(a, b) { return b.cantidad - a.cantidad })
+
+  const tablaPorNumero = Object.entries(porNumero)
+    .map(function(e) {
+      return {
+        nombre:     e[0] + ' redes',
+        cantidad:   e[1],
+        porcentaje: ((e[1] / total) * 100).toFixed(1)
+      }
+    })
+    .sort(function(a, b) { return parseInt(a.nombre) - parseInt(b.nombre) })
+
+  return { tablaPorRed, tablaPorNumero }
+}
+
+// Analiza los espacios de las compañías.
+// Devuelve dos tablas: distribución por tipo de espacio
+// y distribución por régimen de tenencia.
+function analizarEspacios(datos) {
+  const total      = datos.length
+  const porTipo    = {}
+  const porRegimen = {}
+
+  datos.forEach(function(fila) {
+    for (let i = 1; i <= 6; i++) {
+      const tipo    = String(fila['Espacios ' + i + ' tipo']    || '').trim()
+      const regimen = String(fila['Espacios ' + i + ' regimen'] || '').trim()
+
+      if (tipo) {
+        porTipo[tipo] = (porTipo[tipo] || 0) + 1
+      }
+      if (regimen) {
+        porRegimen[regimen] = (porRegimen[regimen] || 0) + 1
+      }
+    }
+  })
+
+  const tablaTipo = Object.entries(porTipo)
+    .map(function(e) {
+      return {
+        nombre:     e[0],
+        cantidad:   e[1],
+        porcentaje: ((e[1] / total) * 100).toFixed(1)
+      }
+    })
+    .sort(function(a, b) { return b.cantidad - a.cantidad })
+
+  const tablaRegimen = Object.entries(porRegimen)
+    .map(function(e) {
+      return {
+        nombre:     e[0],
+        cantidad:   e[1],
+        porcentaje: ((e[1] / total) * 100).toFixed(1)
+      }
+    })
+    .sort(function(a, b) { return b.cantidad - a.cantidad })
+
+  return { tablaTipo, tablaRegimen }
 }
