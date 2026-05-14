@@ -249,3 +249,117 @@ function analizarEspacios(datos) {
 
   return { tablaTipo, tablaRegimen }
 }
+
+// Extrae el mes de un campo de fecha del Excel.
+// Devuelve un número del 1 al 12, o null si no lo encuentra.
+function extraerMes(valor) {
+  if (!valor) return null
+  const texto = String(valor).trim()
+
+  // Si es formato DD/MM/YYYY
+  const formato1 = texto.match(/^\d{1,2}\/(\d{1,2})\/\d{4}$/)
+  if (formato1) return parseInt(formato1[1])
+
+  // Si es formato YYYY-MM-DD
+  const formato2 = texto.match(/^\d{4}-(\d{2})-\d{2}$/)
+  if (formato2) return parseInt(formato2[1])
+
+  return null
+}
+
+// Recibe el nombre de un país y devuelve si la función
+// es de mercado Interior (España) o Exterior (cualquier otro país).
+function calcularMercado(pais) {
+  if (!pais) return 'Sin datos'
+  const p = String(pais).trim().toLowerCase()
+  if (p === 'españa' || p === 'spain' || p === 'es') return 'Interior'
+  return 'Exterior'
+}
+
+function calcularRegion(pais) {
+  if (!pais) return 'Sin datos'
+
+  // Normalizamos: quitamos espacios, pasamos a minúsculas
+  // y eliminamos tildes para que "España", "españa" y "ESPANA" funcionen igual
+  function normalizar(texto) {
+    return String(texto).trim().toLowerCase()
+      .replace(/á/g, 'a').replace(/é/g, 'e').replace(/í/g, 'i')
+      .replace(/ó/g, 'o').replace(/ú/g, 'u').replace(/ü/g, 'u')
+      .replace(/ñ/g, 'n')
+  }
+
+  const REGIONES = {
+    'espana': 'Interior',
+
+    // EUROPA
+    'alemania': 'Europa', 'austria': 'Europa', 'belgica': 'Europa',
+    'bosnia': 'Europa', 'bulgaria': 'Europa', 'chipre': 'Europa',
+    'croacia': 'Europa', 'dinamarca': 'Europa', 'eslovaquia': 'Europa',
+    'eslovenia': 'Europa', 'estonia': 'Europa', 'finlandia': 'Europa',
+    'francia': 'Europa', 'grecia': 'Europa', 'hungria': 'Europa',
+    'irlanda': 'Europa', 'islandia': 'Europa', 'italia': 'Europa',
+    'kosovo': 'Europa', 'letonia': 'Europa', 'liechtenstein': 'Europa',
+    'lituania': 'Europa', 'luxemburgo': 'Europa', 'malta': 'Europa',
+    'moldavia': 'Europa', 'monaco': 'Europa', 'montenegro': 'Europa',
+    'noruega': 'Europa', 'paises bajos': 'Europa', 'holanda': 'Europa',
+    'polonia': 'Europa', 'portugal': 'Europa', 'reino unido': 'Europa',
+    'republica checa': 'Europa', 'rumania': 'Europa', 'rusia': 'Europa',
+    'serbia': 'Europa', 'suecia': 'Europa', 'suiza': 'Europa',
+    'ucrania': 'Europa', 'bielorrusia': 'Europa', 'andorra': 'Europa',
+    'macedonia': 'Europa', 'albania': 'Europa',
+
+    // MAGREB
+    'marruecos': 'Magreb', 'argelia': 'Magreb', 'tunez': 'Magreb',
+    'libia': 'Magreb', 'mauritania': 'Magreb',
+
+    // ORIENTE MEDIO (incluye Turquía)
+    'turquia': 'Oriente Medio', 'israel': 'Oriente Medio',
+    'jordania': 'Oriente Medio', 'libano': 'Oriente Medio',
+    'siria': 'Oriente Medio', 'irak': 'Oriente Medio',
+    'iran': 'Oriente Medio', 'kuwait': 'Oriente Medio',
+    'arabia saudi': 'Oriente Medio', 'emiratos': 'Oriente Medio',
+    'emiratos arabes': 'Oriente Medio', 'qatar': 'Oriente Medio',
+    'bahrein': 'Oriente Medio', 'oman': 'Oriente Medio',
+    'yemen': 'Oriente Medio', 'palestina': 'Oriente Medio',
+    'egipto': 'Oriente Medio',
+
+    // ASIA (incluye Armenia, Australia, Nueva Zelanda)
+    'armenia': 'Asia', 'australia': 'Asia', 'nueva zelanda': 'Asia',
+    'china': 'Asia', 'japon': 'Asia', 'corea del sur': 'Asia',
+    'corea del norte': 'Asia', 'india': 'Asia', 'indonesia': 'Asia',
+    'tailandia': 'Asia', 'vietnam': 'Asia', 'filipinas': 'Asia',
+    'malasia': 'Asia', 'singapur': 'Asia', 'taiwan': 'Asia',
+    'hong kong': 'Asia', 'mongolia': 'Asia', 'nepal': 'Asia',
+    'pakistan': 'Asia', 'bangladesh': 'Asia', 'sri lanka': 'Asia',
+    'kazajistan': 'Asia', 'uzbekistan': 'Asia', 'georgia': 'Asia',
+    'azerbaiyan': 'Asia', 'afganistan': 'Asia',
+
+    // ÁFRICA
+    'sudafrica': 'Africa', 'nigeria': 'Africa', 'kenia': 'Africa',
+    'ghana': 'Africa', 'etiopia': 'Africa', 'tanzania': 'Africa',
+    'uganda': 'Africa', 'camerun': 'Africa', 'senegal': 'Africa',
+    'costa de marfil': 'Africa', 'angola': 'Africa', 'mozambique': 'Africa',
+    'zimbabwe': 'Africa', 'zambia': 'Africa', 'ruanda': 'Africa',
+    'mali': 'Africa', 'burkina faso': 'Africa', 'guinea': 'Africa',
+    'benin': 'Africa', 'congo': 'Africa', 'sudan': 'Africa',
+
+    // NORTEAMÉRICA
+    'estados unidos': 'Norteamerica', 'ee.uu.': 'Norteamerica',
+    'eeuu': 'Norteamerica', 'usa': 'Norteamerica', 'canada': 'Norteamerica',
+
+    // LATINOAMÉRICA
+    'mexico': 'Latinoamerica', 'argentina': 'Latinoamerica',
+    'brasil': 'Latinoamerica', 'colombia': 'Latinoamerica',
+    'chile': 'Latinoamerica', 'peru': 'Latinoamerica',
+    'venezuela': 'Latinoamerica', 'ecuador': 'Latinoamerica',
+    'bolivia': 'Latinoamerica', 'paraguay': 'Latinoamerica',
+    'uruguay': 'Latinoamerica', 'cuba': 'Latinoamerica',
+    'republica dominicana': 'Latinoamerica', 'puerto rico': 'Latinoamerica',
+    'costa rica': 'Latinoamerica', 'panama': 'Latinoamerica',
+    'guatemala': 'Latinoamerica', 'honduras': 'Latinoamerica',
+    'el salvador': 'Latinoamerica', 'nicaragua': 'Latinoamerica',
+  }
+
+  const region = REGIONES[normalizar(pais)]
+  return region || 'Otras regiones'
+}
