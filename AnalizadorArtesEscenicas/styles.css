@@ -1,5 +1,7 @@
 @import url('https://fonts.googleapis.com/css2?family=Barlow+Condensed:wght@700;800&family=Barlow:wght@400;500;600&display=swap');
 
+/* Lunes 11 */
+
 :root {
   --lima: #C9E02A;
   --negro: #0D0D0D;
@@ -24,6 +26,8 @@ body {
   margin: 40px auto;
   padding: 0 20px;
 }
+
+/* Martes 12 */
 
 /* --- Cabecera Fija --- */
 .header-fijo {
@@ -100,6 +104,8 @@ body {
   color: var(--lima);
   box-shadow: 0 2px 5px rgba(0,0,0,0.1);
 }
+
+/* Miercoles 13 */
 
 /* --- Tablas Estilizadas --- */
 .tabla-analisis {
@@ -197,4 +203,38 @@ body {
     display: block;
     overflow-x: auto; /* Permite scroll horizontal en tablas muy anchas */
   }
+}
+
+/* Jueves 14 */
+
+/* --- Navegación de Pestañas Principales --- */
+.tabs-principales {
+  display: flex;
+  justify-content: center;
+  gap: 10px;
+  margin-bottom: 30px;
+  border-bottom: 2px solid var(--gris-borde);
+  padding-bottom: 10px;
+}
+
+.tab-main-btn {
+  background: none;
+  border: none;
+  padding: 10px 20px;
+  font-family: 'Barlow Condensed', sans-serif;
+  font-size: 1.1rem;
+  text-transform: uppercase;
+  font-weight: 700;
+  cursor: pointer;
+  color: #999;
+  transition: all 0.3s;
+}
+
+.tab-main-btn:hover {
+  color: var(--negro);
+}
+
+.tab-main-btn.active {
+  color: var(--negro);
+  border-bottom: 3px solid var(--lima);
 }
