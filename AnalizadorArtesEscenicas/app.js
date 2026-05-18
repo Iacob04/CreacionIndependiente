@@ -1,16 +1,18 @@
-const { useState } = React;
+const { useState, useEffect } = React;
 
 // --- COMPONENTES BASE ---
 
-function EstadisticasBar({ datos }) {
+function EstadisticasBar({ datos, promedioCustom, medianaCustom, etiquetaCustom = "N" }) {
   if (!datos || datos.length === 0) return null;
-  const valoresN = datos.map(d => d.n);
-  const promedio = (valoresN.reduce((a, b) => a + b, 0) / valoresN.length).toFixed(1);
-  const mediana = typeof calcularMediana === 'function' ? calcularMediana(valoresN) : 0;
+  
+  const promedio = promedioCustom !== undefined ? promedioCustom : (datos.map(d => d.n).reduce((a, b) => a + b, 0) / datos.length).toFixed(1);
+  // Buscamos calcularMediana de forma segura en el objeto global window
+  const mediana = medianaCustom !== undefined ? medianaCustom : (typeof window.calcularMediana === 'function' ? window.calcularMediana(datos.map(d => d.n)) : 0);
+  
   return (
     <div className="estadisticas-bar">
-      <div className="stat-item"><span className="stat-valor">{promedio}</span><span className="stat-etiqueta">Promedio (N)</span></div>
-      <div className="stat-item"><span className="stat-valor">{mediana}</span><span className="stat-etiqueta">Mediana (N)</span></div>
+      <div className="stat-item"><span className="stat-valor">{promedio}</span><span className="stat-etiqueta">Promedio ({etiquetaCustom})</span></div>
+      <div className="stat-item"><span className="stat-valor">{mediana}</span><span className="stat-etiqueta">Mediana ({etiquetaCustom})</span></div>
       <div className="stat-item"><span className="stat-valor">{datos.length}</span><span className="stat-etiqueta">Categorías</span></div>
     </div>
   );
@@ -28,7 +30,7 @@ function GraficoBarras({ datos }) {
       <ResponsiveContainer>
         <BarChart layout="vertical" data={datosGrafico} margin={{ left: 10, right: 60, top: 10, bottom: 10 }}>
           <CartesianGrid strokeDasharray="3 3" horizontal={false} stroke="#eee" />
-          <XAxis type="number" hide domain={[0, 100]} />
+          <XAxis type="number" hide domain={[0, 'dataMax + 10']} />
           <YAxis dataKey="categoria" type="category" width={150} tickFormatter={truncarTexto} tick={{ fontSize: 12, fill: NEGRO, fontWeight: 500 }} axisLine={false} />
           <Tooltip cursor={{ fill: 'rgba(201,224,42,0.1)' }} contentStyle={{ borderRadius: '12px', border: 'none', boxShadow: '0 4px 12px rgba(0,0,0,0.1)' }} />
           <Bar dataKey="porcentaje" fill={NEGRO} radius={[0, 6, 6, 0]} barSize={28}>
@@ -41,7 +43,7 @@ function GraficoBarras({ datos }) {
   );
 }
 
-function SeccionAnalisis({ titulo, datos }) {
+function SeccionAnalisis({ titulo, datos, promedioCustom, medianaCustom, etiquetaCustom }) {
   const [vista, setVista] = useState("tabla");
   if (!datos || datos.length === 0) return null;
   return (
@@ -53,7 +55,7 @@ function SeccionAnalisis({ titulo, datos }) {
           <button className={`toggle-btn ${vista === 'grafico' ? 'activo' : ''}`} onClick={() => setVista("grafico")}>Gráfico</button>
         </div>
       </div>
-      <EstadisticasBar datos={datos} />
+      <EstadisticasBar datos={datos} promedioCustom={promedioCustom} medianaCustom={medianaCustom} etiquetaCustom={etiquetaCustom} />
       {vista === "tabla" ? (
         <div style={{ overflowX: 'auto' }}>
           <table className="tabla-analisis">
@@ -81,7 +83,7 @@ const procesarFrecuencias = (data, palabrasClave, extractor = null) => {
     const claveCol = Object.keys(fila).find(k => palabrasClave.some(p => k.toLowerCase().includes(p.toLowerCase())));
     let valor = "Sin especificar";
     
-    if (claveCol && fila[claveCol]) {
+    if (claveCol && (fila[claveCol] !== undefined && fila[claveCol] !== "")) {
       valor = extractor ? extractor(fila[claveCol]) : String(fila[claveCol]).trim();
     }
     
@@ -99,7 +101,6 @@ const procesarFrecuencias = (data, palabrasClave, extractor = null) => {
 };
 
 // --- PESTAÑAS (TABS) ---
-// Ahora reciben 'filas' y 'setFilas' como props 
 
 function OrgTab({ filas, setFilas }) {
   const [cargando, setCargando] = useState(false);
@@ -108,15 +109,20 @@ function OrgTab({ filas, setFilas }) {
     const file = e.target.files[0];
     if (!file) return;
     setCargando(true);
-    const data = await leerExcel(file);
-    setFilas(data);
+    try {
+      // Llamada segura a window.leerExcel
+      const data = await window.leerExcel(file);
+      setFilas(data);
+    } catch (err) {
+      console.error(err);
+    }
     setCargando(false);
   };
 
   return (
     <div>
       <div style={{ textAlign: 'center', margin: '20px 0' }}>
-        <label className="label-archivo">📁 {filas ? 'Cambiar' : 'Cargar'} Excel Organizaciones
+        <label className="label-archivo"> {filas ? 'Cambiar' : 'Cargar'} Excel Organizaciones
           <input type="file" accept=".xlsx,.xls" onChange={handleCarga} style={{ display: 'none' }} />
         </label>
       </div>
@@ -133,7 +139,6 @@ function OrgTab({ filas, setFilas }) {
 }
 
 function ProdTab({ filas, setFilas }) {
-    // Implementación similar se puede añadir aquí
     return <div className="seccion-analisis" style={{ textAlign: 'center' }}><h3>Próximamente: Análisis de Producciones</h3></div>;
 }
 
@@ -144,37 +149,76 @@ function FuncionesTab({ filas, setFilas }) {
     const file = e.target.files[0];
     if (!file) return;
     setCargando(true);
-    const data = await leerExcel(file);
-    setFilas(data);
+    try {
+      // Llamada segura a window.leerExcel
+      const data = await window.leerExcel(file);
+      setFilas(data);
+    } catch (err) {
+      console.error(err);
+    }
     setCargando(false);
   };
 
-  const extraerMes = (valor) => {
+  const obtenerNombreMes = (valor) => {
     if (!valor) return "Sin datos";
+    const nombresMeses = ["ENERO", "FEBRERO", "MARZO", "ABRIL", "MAYO", "JUNIO", "JULIO", "AGOSTO", "SEPTIEMBRE", "OCTUBRE", "NOVIEMBRE", "DICIEMBRE"];
+    const numMes = typeof window.extraerMes === 'function' ? window.extraerMes(valor) : null;
+    if (numMes && numMes >= 1 && numMes <= 12) {
+      return nombresMeses[numMes - 1];
+    }
     const fecha = new Date(valor);
-    if (isNaN(fecha)) return "Sin datos";
-    return fecha.toLocaleString('es-ES', { month: 'long' }).toUpperCase();
+    if (!isNaN(fecha)) {
+      return fecha.toLocaleString('es-ES', { month: 'long' }).toUpperCase();
+    }
+    return "Sin datos";
   };
 
-  const extraerMercado = (valor) => {
-    const t = String(valor).toLowerCase();
-    if (t.includes("exterior") || t.includes("internacional") || t.includes("fuera")) return "EXTERIOR";
-    return "INTERIOR (España)";
-  };
+  let promedioIngresos = undefined;
+  let medianaIngresos = undefined;
+
+  if (filas && filas.length > 0) {
+    const colIngresos = Object.keys(filas[0]).find(k => ["ingreso", "cache", "caché", "precio", "recaudacion", "importe"].some(p => k.toLowerCase().includes(p)));
+    if (colIngresos) {
+      const valores = filas.map(f => parseFloat(f[colIngresos])).filter(v => !isNaN(v));
+      if (valores.length > 0) {
+        promedioIngresos = (valores.reduce((a, b) => a + b, 0) / valores.length).toFixed(2);
+        valores.sort((a, b) => a - b);
+        const mitad = Math.floor(valores.length / 2);
+        medianaIngresos = valores.length % 2 === 0 ? ((valores[mitad - 1] + valores[mitad]) / 2).toFixed(2) : valores[mitad].toFixed(2);
+      }
+    }
+  }
 
   return (
     <div>
       <div style={{ textAlign: 'center', margin: '20px 0' }}>
-        <label className="label-archivo">📁 {filas ? 'Cambiar' : 'Cargar'} Excel Funciones
+        <label className="label-archivo"> {filas ? 'Cambiar' : 'Cargar'} Excel Funciones
           <input type="file" accept=".xlsx,.xls" onChange={handleCarga} style={{ display: 'none' }} />
         </label>
       </div>
       {cargando && <p className="estado">Cargando datos...</p>}
       {filas && (
         <div className="resultado">
-          <SeccionAnalisis titulo="Funciones por Año" datos={procesarFrecuencias(filas, ["fecha", "año", "anio"], extraerAnio)} />
-          <SeccionAnalisis titulo="Distribución por Mes" datos={procesarFrecuencias(filas, ["fecha", "mes"], extraerMes)} />
-          <SeccionAnalisis titulo="Mercado (Interior vs Exterior)" datos={procesarFrecuencias(filas, ["lugar", "mercado", "pais"], extraerMercado)} />
+          {/* Todas las funciones de extracción mapeadas de manera segura a través de window */}
+          <SeccionAnalisis titulo="Funciones por Año" datos={procesarFrecuencias(filas, ["fecha", "año", "anio"], typeof window.extraerAnio === 'function' ? window.extraerAnio : null)} />
+          <SeccionAnalisis titulo="Distribución por Mes" datos={procesarFrecuencias(filas, ["fecha", "mes"], obtenerNombreMes)} />
+          <SeccionAnalisis titulo="Funciones por CCAA donde tienen lugar" datos={procesarFrecuencias(filas, ["ccaa", "comunidad"])} />
+          <SeccionAnalisis titulo="Funciones por Género" datos={procesarFrecuencias(filas, ["genero", "género"])} />
+          <SeccionAnalisis titulo="Funciones por Subgénero" datos={procesarFrecuencias(filas, ["subgenero", "subgénero"])} />
+          <SeccionAnalisis titulo="Funciones por Mercado (Interior / Exterior)" datos={procesarFrecuencias(filas, ["mercado", "pais", "país", "lugar"], typeof window.calcularMercado === 'function' ? window.calcularMercado : null)} />
+          <SeccionAnalisis titulo="Funciones por Región del Mundo" datos={procesarFrecuencias(filas, ["pais", "país", "region", "región"], typeof window.calcularRegion === 'function' ? window.calcularRegion : null)} />
+          <SeccionAnalisis titulo="Funciones por País" datos={procesarFrecuencias(filas, ["pais", "país", "nation"])} />
+          <SeccionAnalisis titulo="Sistema de Contratación" datos={procesarFrecuencias(filas, ["contratacion", "contratación", "sistema"])} />
+          <SeccionAnalisis titulo="Forma de Retribución" datos={procesarFrecuencias(filas, ["retribucion", "retribución", "pago", "forma de pago"])} />
+          
+          
+          <SeccionAnalisis 
+            titulo="Rangos de Ingresos / Caché" 
+            datos={procesarFrecuencias(filas, ["ingreso", "cache", "caché", "precio", "recaudacion", "importe"], (v) => typeof window.rangoCache === 'function' ? window.rangoCache(parseFloat(v) || 0) : null)} 
+            promedioCustom={promedioIngresos}
+            medianaCustom={medianaIngresos}
+            etiquetaCustom="€"
+          />
         </div>
       )}
     </div>
@@ -185,28 +229,42 @@ function FuncionesTab({ filas, setFilas }) {
 
 function App() {
   const [tabActiva, setTabActiva] = useState("org");
+  const [utilsListo, setUtilsListo] = useState(false);
   
-  // ESTADO GLOBAL: Guardamos los datos aquí para que no se pierdan al cambiar de pestaña (preservación de los datos Jueves 14)
   const [dataOrg, setDataOrg] = useState(null);
   const [dataProd, setDataProd] = useState(null);
   const [dataFunc, setDataFunc] = useState(null);
 
-  if (!window.Recharts) return <div className="estado">Cargando librerías...</div>;
+  //Lee utils.js y lo fuerza a inyectarse globalmente en window
+  useEffect(() => {
+    fetch('utils.js')
+      .then(response => response.text())
+      .then(codigo => {
+        const scriptGlobal = document.createElement('script');
+        scriptGlobal.text = codigo; // Al ejecutarse en un tag estándar, expone funciones en window
+        document.head.appendChild(scriptGlobal);
+        setUtilsListo(true);
+      })
+      .catch(err => {
+        console.error("Error cargando el puente de utilidades:", err);
+        setUtilsListo(true); // Continuar de todos modos para evitar bloqueo total
+      });
+  }, []);
+
+  if (!window.Recharts || !utilsListo) return <div className="estado">Cargando librerías del sistema...</div>;
 
   return (
     <>
       <header className="header-fijo">
         <h1>Creación Independiente — Artes Escénicas</h1>
-      </header>
-
-      <div className="contenedor">
         <nav className="tabs-principales">
           <button className={`tab-main-btn ${tabActiva === 'org' ? 'active' : ''}`} onClick={() => setTabActiva("org")}>Organizaciones</button>
           <button className={`tab-main-btn ${tabActiva === 'prod' ? 'active' : ''}`} onClick={() => setTabActiva("prod")}>Producciones</button>
           <button className={`tab-main-btn ${tabActiva === 'func' ? 'active' : ''}`} onClick={() => setTabActiva("func")}>Funciones</button>
         </nav>
+      </header>
 
-        {/* Llamamos a los datos y la función para actualizarlos como props */}
+      <div className="contenedor">
         {tabActiva === "org" && <OrgTab filas={dataOrg} setFilas={setDataOrg} />}
         {tabActiva === "prod" && <ProdTab filas={dataProd} setFilas={setDataProd} />}
         {tabActiva === "func" && <FuncionesTab filas={dataFunc} setFilas={setDataFunc} />}
@@ -217,4 +275,3 @@ function App() {
 
 const root = ReactDOM.createRoot(document.getElementById("root"));
 root.render(<App />);
-
