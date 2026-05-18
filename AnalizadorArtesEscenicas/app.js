@@ -100,6 +100,19 @@ const procesarFrecuencias = (data, palabrasClave, extractor = null) => {
   })).sort((a, b) => b.n - a.n);
 };
 
+// NUEVO: convierte el formato de utils.js {nombre, cantidad, porcentaje}
+// al formato que esperan los componentes   {categoria, n, porcentaje}
+function adaptar(resultado) {
+  if (!resultado) return [];
+  return resultado.map(function(item) {
+    return {
+      categoria:  item.nombre,
+      n:          item.cantidad,
+      porcentaje: parseFloat(item.porcentaje)
+    };
+  });
+}
+
 // --- PESTAÑAS (TABS) ---
 
 function OrgTab({ filas, setFilas }) {
@@ -132,14 +145,121 @@ function OrgTab({ filas, setFilas }) {
           <SeccionAnalisis titulo="Asociaciones" datos={procesarFrecuencias(filas, ["asociacion", "asoc"])} />
           <SeccionAnalisis titulo="Formas Jurídicas" datos={procesarFrecuencias(filas, ["forma", "juridica"])} />
           <SeccionAnalisis titulo="Comunidades Autónomas" datos={procesarFrecuencias(filas, ["ccaa", "comunidad"])} />
+          {/* NUEVO: secciones añadidas */}
+          <SeccionAnalisis titulo="Provincias"
+            datos={procesarFrecuencias(filas, ["provincia"])} />
+          <SeccionAnalisis titulo="Género artístico"
+            datos={procesarFrecuencias(filas, ["genero", "género"])} />
+          <SeccionAnalisis titulo="Subgénero artístico"
+            datos={procesarFrecuencias(filas, ["subgenero", "subgénero"])} />
+          <SeccionAnalisis titulo="Compañías inclusivas"
+            datos={procesarFrecuencias(filas, ["inclusiva", "inclusivo"])} />
+          <SeccionAnalisis titulo="Redes sociales — por plataforma"
+            datos={adaptar(window.analizarRedes(filas).tablaPorRed)} />
+          <SeccionAnalisis titulo="Redes sociales — nº de redes por compañía"
+            datos={adaptar(window.analizarRedes(filas).tablaPorNumero)} />
+          <SeccionAnalisis titulo="Espacios — tipo"
+            datos={adaptar(window.analizarEspacios(filas).tablaTipo)} />
+          <SeccionAnalisis titulo="Espacios — régimen de tenencia"
+            datos={adaptar(window.analizarEspacios(filas).tablaRegimen)} />
         </div>
       )}
     </div>
   );
 }
 
+// NUEVO: ProdTab completa (antes era un placeholder)
 function ProdTab({ filas, setFilas }) {
-    return <div className="seccion-analisis" style={{ textAlign: 'center' }}><h3>Próximamente: Análisis de Producciones</h3></div>;
+  const [cargando, setCargando] = useState(false);
+
+  const handleCarga = async (e) => {
+    const file = e.target.files[0];
+    if (!file) return;
+    setCargando(true);
+    try {
+      const data = await window.leerExcel(file);
+      setFilas(data);
+    } catch (err) {
+      console.error(err);
+    }
+    setCargando(false);
+  };
+
+  let promedioInterpretes = undefined;
+  let medianaInterpretes  = undefined;
+  let promedioCoste       = undefined;
+  let medianaCoste        = undefined;
+  let promedioCache       = undefined;
+  let medianaCache        = undefined;
+  let promedioDuracion    = undefined;
+  let medianaDuracion     = undefined;
+
+  if (filas && filas.length > 0) {
+    const calcStats = (col) => {
+      const vals = filas.map(f => parseFloat(f[col])).filter(v => !isNaN(v));
+      if (!vals.length) return [undefined, undefined];
+      const avg = (vals.reduce((a, b) => a + b, 0) / vals.length).toFixed(1);
+      const sorted = [...vals].sort((a, b) => a - b);
+      const mid = Math.floor(sorted.length / 2);
+      const med = sorted.length % 2 === 0
+        ? ((sorted[mid - 1] + sorted[mid]) / 2).toFixed(1)
+        : sorted[mid].toFixed(1);
+      return [avg, med];
+    };
+    [promedioInterpretes, medianaInterpretes] = calcStats('Numero de interpretes');
+    [promedioCoste,       medianaCoste]       = calcStats('Coste total');
+    [promedioCache,       medianaCache]       = calcStats('Cache medio');
+    [promedioDuracion,    medianaDuracion]    = calcStats('Duracion');
+  }
+
+  return (
+    <div>
+      <div style={{ textAlign: 'center', margin: '20px 0' }}>
+        <label className="label-archivo">
+          {filas ? 'Cambiar' : 'Cargar'} Excel Producciones
+          <input type="file" accept=".xlsx,.xls"
+                 onChange={handleCarga} style={{ display: 'none' }} />
+        </label>
+      </div>
+      {cargando && <p className="estado">Cargando datos...</p>}
+      {filas && (
+        <div className="resultado">
+          <SeccionAnalisis titulo="Producciones por año"
+            datos={procesarFrecuencias(filas,
+              ['fecha', 'estreno', 'anio', 'año'],
+              typeof window.extraerAnio === 'function' ? window.extraerAnio : null)} />
+          <SeccionAnalisis titulo="Por Comunidad Autónoma"
+            datos={procesarFrecuencias(filas, ['comunidad', 'ccaa'])} />
+          <SeccionAnalisis titulo="Por Provincia"
+            datos={procesarFrecuencias(filas, ['provincia'])} />
+          <SeccionAnalisis titulo="Por Género artístico"
+            datos={procesarFrecuencias(filas, ['genero', 'género'])} />
+          <SeccionAnalisis titulo="Por Subgénero artístico"
+            datos={procesarFrecuencias(filas, ['subgenero', 'subgénero'])} />
+          <SeccionAnalisis titulo="Número de intérpretes"
+            datos={adaptar(window.contarPorRango(filas, 'Numero de interpretes', window.rangoInterpretes))}
+            promedioCustom={promedioInterpretes}
+            medianaCustom={medianaInterpretes}
+            etiquetaCustom="intérp." />
+          <SeccionAnalisis titulo="Duración del espectáculo"
+            datos={adaptar(window.contarPorRango(filas, 'Duracion', window.rangoDuracion))}
+            promedioCustom={promedioDuracion}
+            medianaCustom={medianaDuracion}
+            etiquetaCustom="min" />
+          <SeccionAnalisis titulo="Coste de producción"
+            datos={adaptar(window.contarPorRango(filas, 'Coste total', window.rangoCoste))}
+            promedioCustom={promedioCoste}
+            medianaCustom={medianaCoste}
+            etiquetaCustom="€" />
+          <SeccionAnalisis titulo="Caché por función"
+            datos={adaptar(window.contarPorRango(filas, 'Cache medio', window.rangoCache))}
+            promedioCustom={promedioCache}
+            medianaCustom={medianaCache}
+            etiquetaCustom="€" />
+        </div>
+      )}
+    </div>
+  );
 }
 
 function FuncionesTab({ filas, setFilas }) {
@@ -210,8 +330,6 @@ function FuncionesTab({ filas, setFilas }) {
           <SeccionAnalisis titulo="Funciones por País" datos={procesarFrecuencias(filas, ["pais", "país", "nation"])} />
           <SeccionAnalisis titulo="Sistema de Contratación" datos={procesarFrecuencias(filas, ["contratacion", "contratación", "sistema"])} />
           <SeccionAnalisis titulo="Forma de Retribución" datos={procesarFrecuencias(filas, ["retribucion", "retribución", "pago", "forma de pago"])} />
-          
-          
           <SeccionAnalisis 
             titulo="Rangos de Ingresos / Caché" 
             datos={procesarFrecuencias(filas, ["ingreso", "cache", "caché", "precio", "recaudacion", "importe"], (v) => typeof window.rangoCache === 'function' ? window.rangoCache(parseFloat(v) || 0) : null)} 
