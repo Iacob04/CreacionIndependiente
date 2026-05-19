@@ -8,6 +8,7 @@
   --gris-borde: #E9ECEF;
   --sombra: 0 4px 15px rgba(0, 0, 0, 0.05);
   --header-height: 70px;
+  --radius: 12px;
 }
 
 /* --- Base y Layout --- */
@@ -16,7 +17,7 @@ body {
   background-color: var(--gris-claro);
   color: var(--negro);
   margin: 0;
-  padding-top: var(--header-height); /* Espacio para el header fijo */
+  padding-top: var(--header-height);
 }
 
 .contenedor {
@@ -79,10 +80,7 @@ body {
   align-items: center;
 }
 
-.tab-main-btn:hover {
-  color: var(--blanco);
-}
-
+.tab-main-btn:hover { color: var(--blanco); }
 .tab-main-btn.active {
   color: var(--lima);
   border-bottom: 3px solid var(--lima);
@@ -91,7 +89,7 @@ body {
 /* --- Tarjetas de Sección --- */
 .seccion-analisis {
   background: var(--blanco);
-  border-radius: 12px;
+  border-radius: var(--radius);
   padding: 25px;
   margin-bottom: 30px;
   border: 1px solid var(--gris-borde);
@@ -140,129 +138,7 @@ body {
   box-shadow: 0 2px 5px rgba(0,0,0,0.1);
 }
 
-/* --- Tablas Estilizadas --- */
-.tabla-analisis {
-  width: 100%;
-  border-collapse: collapse;
-  margin-top: 10px;
-  font-size: 0.95rem;
-}
-
-.tabla-analisis thead th {
-  background: var(--negro);
-  color: var(--blanco);
-  text-align: left;
-  padding: 12px 15px;
-  font-weight: 500;
-  text-transform: uppercase;
-  font-size: 0.8rem;
-}
-
-.tabla-analisis tbody td {
-  padding: 12px 15px;
-  border-bottom: 1px solid var(--gris-borde);
-}
-
-.tabla-analisis tbody tr:nth-child(even) {
-  background-color: var(--gris-claro);
-}
-
-.tabla-analisis tbody tr:hover {
-  background-color: rgba(201, 224, 42, 0.1);
-  transition: background 0.2s;
-}
-
-/* --- Estadísticas --- */
-.estadisticas-bar {
-  display: grid;
-  grid-template-columns: repeat(3, 1fr);
-  gap: 15px;
-  margin-bottom: 25px;
-}
-
-.stat-item {
-  background: var(--gris-claro);
-  padding: 15px;
-  border-radius: 10px;
-  text-align: center;
-}
-
-.stat-valor {
-  display: block;
-  font-size: 1.5rem;
-  font-weight: 800;
-  color: var(--negro);
-}
-
-.stat-etiqueta {
-  font-size: 0.75rem;
-  color: #777;
-  text-transform: uppercase;
-  font-weight: 600;
-}
-
-/* --- Input de Archivo --- */
-.label-archivo {
-  display: inline-block;
-  background: var(--lima);
-  color: var(--negro);
-  padding: 12px 25px;
-  border-radius: 8px;
-  font-weight: 700;
-  cursor: pointer;
-  border: 2px solid var(--negro);
-  transition: transform 0.2s;
-}
-
-.label-archivo:hover {
-  transform: translateY(-2px);
-}
-
-/* --- Adaptación Móvil (Responsive) --- */
-@media (max-width: 768px) {
-  .header-fijo {
-    flex-direction: column;
-    height: auto;
-    padding: 12px 15px;
-    justify-content: center;
-    gap: 10px;
-  }
-  
-  body {
-    padding-top: 115px; /* Más margen superior en móvil para acomodar el header de dos líneas */
-  }
-
-  .header-fijo h1 { 
-    font-size: 1.1rem; 
-    text-align: center;
-  }
-  
-  .tabs-principales {
-    gap: 5px;
-  }
-
-  .tab-main-btn {
-    font-size: 0.95rem;
-    padding: 6px 10px;
-  }
-
-  .estadisticas-bar {
-    grid-template-columns: 1fr;
-  }
-  
-  .seccion-header {
-    flex-direction: column;
-    align-items: flex-start;
-    gap: 15px;
-  }
-  
-  .tabla-analisis {
-    display: block;
-    overflow-x: auto;
-  }
-}
-
-/* 1. Asegurar legibilidad y comportamiento responsivo en tablas extensas */
+/* --- Tabla --- */
 .tabla-analisis {
   width: 100%;
   border-collapse: collapse;
@@ -290,29 +166,28 @@ body {
   color: var(--negro);
 }
 
-/* 2. Corrección del contenedor para evitar deformaciones en Recharts */
-.recharts-responsive-container {
-  background: var(--blanco);
-  padding: 20px 10px;
-  border-radius: var(--radius);
-  border: 1px solid var(--gris-borde);
-  box-shadow: var(--sombra);
-  box-sizing: border-box;
+.tabla-analisis tbody tr:nth-child(even) {
+  background-color: var(--gris-claro);
 }
 
-/* 3. Rediseño moderno de las Tarjetas de Estadísticas (KPI Bars) */
+.tabla-analisis tbody tr:hover {
+  background-color: rgba(201, 224, 42, 0.1);
+  transition: background 0.2s;
+}
+
+/* --- Estadísticas --- */
 .estadisticas-bar {
   display: grid;
-  grid-template-columns: repeat(auto-fit, minmax(220px, 1fr)) !important;
-  gap: 16px !important;
-  margin: 20px 0 25px 0 !important;
+  grid-template-columns: repeat(auto-fit, minmax(220px, 1fr));
+  gap: 16px;
+  margin: 20px 0 25px 0;
 }
 
 .stat-item {
-  background: var(--blanco) !important;
-  border: 1px solid var(--gris-borde) !important;
-  padding: 20px !important;
-  border-radius: var(--radius) !important;
+  background: var(--blanco);
+  border: 1px solid var(--gris-borde);
+  padding: 20px;
+  border-radius: var(--radius);
   display: flex;
   flex-direction: column;
   align-items: center;
@@ -324,18 +199,66 @@ body {
 .stat-item:hover {
   transform: translateY(-3px);
   box-shadow: 0 6px 20px rgba(0, 0, 0, 0.08);
-  border-color: var(--lima) !important; /* Destello sutil al pasar el mouse */
+  border-color: var(--lima);
 }
 
 .stat-valor {
-  font-size: 1.8rem !important;
+  display: block;
+  font-size: 1.8rem;
+  font-weight: 800;
   color: var(--negro);
   line-height: 1.2;
   margin-bottom: 4px;
 }
 
 .stat-etiqueta {
-  font-size: 0.8rem !important;
-  color: var(--gris-texto, #777);
+  font-size: 0.8rem;
+  color: #777;
+  text-transform: uppercase;
+  font-weight: 600;
   letter-spacing: 0.5px;
+}
+
+/* --- Input de Archivo --- */
+.label-archivo {
+  display: inline-block;
+  background: var(--lima);
+  color: var(--negro);
+  padding: 12px 25px;
+  border-radius: 8px;
+  font-weight: 700;
+  cursor: pointer;
+  border: 2px solid var(--negro);
+  transition: transform 0.2s;
+}
+
+.label-archivo:hover { transform: translateY(-2px); }
+
+/* --- Recharts --- */
+.recharts-responsive-container {
+  background: var(--blanco);
+  padding: 20px 10px;
+  border-radius: var(--radius);
+  border: 1px solid var(--gris-borde);
+  box-shadow: var(--sombra);
+  box-sizing: border-box;
+}
+
+/* --- Responsive --- */
+@media (max-width: 768px) {
+  .header-fijo {
+    flex-direction: column;
+    height: auto;
+    padding: 12px 15px;
+    justify-content: center;
+    gap: 10px;
+  }
+
+  body { padding-top: 115px; }
+  .header-fijo h1 { font-size: 1.1rem; text-align: center; }
+  .tabs-principales { gap: 5px; }
+  .tab-main-btn { font-size: 0.95rem; padding: 6px 10px; }
+  .estadisticas-bar { grid-template-columns: 1fr; }
+  .seccion-header { flex-direction: column; align-items: flex-start; gap: 15px; }
+  .tabla-analisis { display: block; overflow-x: auto; }
 }
