@@ -262,3 +262,23 @@ body {
   .seccion-header { flex-direction: column; align-items: flex-start; gap: 15px; }
   .tabla-analisis { display: block; overflow-x: auto; }
 }
+
+/* --- Botón de descarga --- */
+.btn-descargar {
+  background: transparent;
+  border: 2px solid var(--negro);
+  color: var(--negro);
+  padding: 7px 14px;
+  border-radius: 7px;
+  font-family: 'Barlow', sans-serif;
+  font-weight: 700;
+  font-size: 0.82rem;
+  cursor: pointer;
+  transition: all 0.2s ease;
+  white-space: nowrap;
+}
+
+.btn-descargar:hover {
+  background: var(--negro);
+  color: var(--lima);
+}
