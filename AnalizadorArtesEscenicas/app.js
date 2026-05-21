@@ -238,7 +238,7 @@ function ProdTab({ filas, setFilas }) {
 
   if (filas && filas.length > 0) {
     const calcStats = (col) => {
-      const vals = filas.map(f => parseFloat(f[col])).filter(v => !isNaN(v));
+      const vals = filas.map(f => parseFloat(f[col])).filter(v => !isNaN(v) && v > 0);
       if (!vals.length) return [undefined, undefined];
       const avg    = (vals.reduce((a, b) => a + b, 0) / vals.length).toFixed(1);
       const sorted = [...vals].sort((a, b) => a - b);
