@@ -1,7 +1,11 @@
 /**
  * Lee un archivo Excel (.xlsx / .xls) y devuelve un array de objetos.
  * Cada elemento representa una fila; las claves son los nombres de columna
- * tomados de la primera fila del archivo.
+ * tomados de la primera fila de la hoja.
+ *
+ * El libro puede contener varias hojas (datos principales + hojas auxiliares).
+ * Para no mezclar filas de hojas distintas, se selecciona la hoja de datos
+ * principal: la que tiene más columnas y, a igualdad, más filas.
  *
  * @param {File} file
  * @returns {Promise<Object[]>}
@@ -15,15 +19,23 @@ function leerExcel(file) {
         const data = new Uint8Array(e.target.result);
         const workbook = XLSX.read(data, { type: "array" });
 
-        let todasLasFilas = [];
+        let mejorHoja = null;
+        let mejorCols = -1;
+        let mejorFilas = -1;
 
         workbook.SheetNames.forEach((nombreHoja) => {
-          const hoja = workbook.Sheets[nombreHoja];
+          const hoja  = workbook.Sheets[nombreHoja];
           const filas = XLSX.utils.sheet_to_json(hoja, { defval: "" });
-          todasLasFilas = todasLasFilas.concat(filas);
+          const cols  = filas.length > 0 ? Object.keys(filas[0]).length : 0;
+
+          if (cols > mejorCols || (cols === mejorCols && filas.length > mejorFilas)) {
+            mejorHoja  = filas;
+            mejorCols  = cols;
+            mejorFilas = filas.length;
+          }
         });
 
-        resolve(todasLasFilas);
+        resolve(mejorHoja || []);
       } catch (err) {
         reject(err);
       }
@@ -246,15 +258,18 @@ function analizarEspacios(datos) {
 }
 
 // Analiza los espacios del fichero Funciones (columnas con distinto prefijo).
-// Busca columnas que contengan 'espacio' y 'tipo' en su nombre.
+// Busca la columna que indica el tipo de espacio/lugar de la función. Acepta
+// tanto nombres con 'espacio'+'tipo' como la columna 'Tipo lugar' de este fichero.
 // Devuelve una tabla con el tipo de espacio y su frecuencia.
 function analizarEspaciosFunciones(datos) {
   const total   = datos.length;
   const porTipo = {};
 
-  const colTipo = datos.length > 0
-    ? Object.keys(datos[0]).find(k => k.toLowerCase().includes('espacio') && k.toLowerCase().includes('tipo'))
-    : null;
+  const claves = datos.length > 0 ? Object.keys(datos[0]) : [];
+  const colTipo =
+       claves.find(k => k.toLowerCase().includes('espacio') && k.toLowerCase().includes('tipo'))
+    || claves.find(k => k.toLowerCase().includes('tipo')    && k.toLowerCase().includes('lugar'))
+    || null;
 
   if (!colTipo) return { tablaTipo: [] };
 

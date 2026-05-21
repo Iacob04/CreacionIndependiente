@@ -369,14 +369,22 @@ function FuncionesTab({ filas, setFilas }) {
     return "Sin datos";
   };
 
-  // Detecta la columna de fecha de primera función. Prioriza la que combina
-  // 'fecha' con 'primera' o 'funcion'; si no la encuentra, usa la primera 'fecha'.
+  // Detecta la columna con la fecha de la primera función. El orden de prioridad
+  // evita confundirla con fechas administrativas (creación/actualización del registro):
+  //   1) patrón "Fechas 1 fecha" (primera fecha de la gira en este fichero)
+  //   2) columna que combine 'fecha' con 'primera' o 'funcion'
+  //   3) cualquier 'fecha' que NO sea de creación/actualización
+  //   4) como último recurso, la primera columna con 'fecha'
   const detectarColFecha = (filas) => {
     if (!filas || !filas.length) return null;
     const claves = Object.keys(filas[0] || {});
-    return claves.find(k =>
-      k.toLowerCase().includes('fecha') && (k.toLowerCase().includes('primera') || k.toLowerCase().includes('funcion'))
-    ) || claves.find(k => k.toLowerCase().includes('fecha')) || null;
+    const lower  = (k) => k.toLowerCase();
+
+    return claves.find(k => lower(k).includes('fechas 1 fecha'))
+        || claves.find(k => lower(k).includes('fecha') && (lower(k).includes('primera') || lower(k).includes('funcion')))
+        || claves.find(k => lower(k).includes('fecha') && !lower(k).includes('creacion') && !lower(k).includes('actualizacion'))
+        || claves.find(k => lower(k).includes('fecha'))
+        || null;
   };
 
   // Obtiene todos los años presentes en el fichero para el selector de filtro
