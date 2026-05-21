@@ -4,10 +4,14 @@ const { useState, useEffect, useRef } = React;
 
 function EstadisticasBar({ datos, promedioCustom, medianaCustom, etiquetaCustom = "N" }) {
   if (!datos || datos.length === 0) return null;
-  
-  const promedio = promedioCustom !== undefined ? promedioCustom : (datos.map(d => d.n).reduce((a, b) => a + b, 0) / datos.length).toFixed(1);
-  const mediana = medianaCustom !== undefined ? medianaCustom : (typeof window.calcularMediana === 'function' ? window.calcularMediana(datos.map(d => d.n)) : 0);
-  
+
+  const promedio = promedioCustom !== undefined
+    ? promedioCustom
+    : (datos.map(d => d.n).reduce((a, b) => a + b, 0) / datos.length).toFixed(1);
+  const mediana = medianaCustom !== undefined
+    ? medianaCustom
+    : (typeof window.calcularMediana === 'function' ? window.calcularMediana(datos.map(d => d.n)) : 0);
+
   return (
     <div className="estadisticas-bar">
       <div className="stat-item"><span className="stat-valor">{promedio}</span><span className="stat-etiqueta">Promedio ({etiquetaCustom})</span></div>
@@ -48,7 +52,6 @@ function SeccionAnalisis({ titulo, datos, promedioCustom, medianaCustom, etiquet
 
   if (!datos || datos.length === 0) return null;
 
-  // Descarga la tabla como archivo Excel
   const descargarExcel = () => {
     const wb = XLSX.utils.book_new();
     const ws = XLSX.utils.json_to_sheet(datos.map(d => ({
@@ -60,7 +63,6 @@ function SeccionAnalisis({ titulo, datos, promedioCustom, medianaCustom, etiquet
     XLSX.writeFile(wb, `${titulo}.xlsx`);
   };
 
-  // Descarga el gráfico como imagen PNG
   const descargarPNG = () => {
     if (!chartRef.current) return;
     const svg = chartRef.current.querySelector('svg');
@@ -99,14 +101,10 @@ function SeccionAnalisis({ titulo, datos, promedioCustom, medianaCustom, etiquet
             <button className={`toggle-btn ${vista === 'grafico' ? 'activo' : ''}`} onClick={() => setVista("grafico")}>Gráfico</button>
           </div>
           {vista === 'tabla' && (
-            <button className="btn-descargar" onClick={descargarExcel} title="Descargar como Excel">
-              ⬇ Excel
-            </button>
+            <button className="btn-descargar" onClick={descargarExcel} title="Descargar como Excel">⬇ Excel</button>
           )}
           {vista === 'grafico' && (
-            <button className="btn-descargar" onClick={descargarPNG} title="Descargar como imagen PNG">
-              ⬇ PNG
-            </button>
+            <button className="btn-descargar" onClick={descargarPNG} title="Descargar como imagen PNG">⬇ PNG</button>
           )}
         </div>
       </div>
@@ -131,21 +129,21 @@ function SeccionAnalisis({ titulo, datos, promedioCustom, medianaCustom, etiquet
   );
 }
 
-// --- LOGICA DE PROCESAMIENTO ---
+// --- LÓGICA DE PROCESAMIENTO ---
 
 const procesarFrecuencias = (data, palabrasClave, extractor = null) => {
   if (!data || !data.length) return [];
   const conteos = {};
   let total = 0;
-  
+
   data.forEach(fila => {
     const claveCol = Object.keys(fila).find(k => palabrasClave.some(p => k.toLowerCase().includes(p.toLowerCase())));
     let valor = "Sin especificar";
-    
+
     if (claveCol && (fila[claveCol] !== undefined && fila[claveCol] !== "")) {
       valor = extractor ? extractor(fila[claveCol]) : String(fila[claveCol]).trim();
     }
-    
+
     if (valor) {
       conteos[valor] = (conteos[valor] || 0) + 1;
       total++;
@@ -170,7 +168,7 @@ function adaptar(resultado) {
   });
 }
 
-// --- PESTAÑAS (TABS) ---
+// --- PESTAÑA ORGANIZACIONES ---
 
 function OrgTab({ filas, setFilas }) {
   const [cargando, setCargando] = useState(false);
@@ -188,10 +186,64 @@ function OrgTab({ filas, setFilas }) {
     setCargando(false);
   };
 
+  // Calcula la distribución de edades (antigüedad) de las compañías
+  const calcularDistribucionEdades = (filas) => {
+    if (!filas || !filas.length) return [];
+    const colFecha = Object.keys(filas[0]).find(k =>
+      k.toLowerCase().includes('fecha') && k.toLowerCase().includes('registro')
+    ) || Object.keys(filas[0]).find(k =>
+      k.toLowerCase().includes('fecha') && k.toLowerCase().includes('juridic')
+    );
+    if (!colFecha) return [];
+
+    const conteos = {};
+    let total = 0;
+    filas.forEach(fila => {
+      const edad = window.calcularEdad(fila[colFecha]);
+      if (edad === null) return;
+      const rango = edad <= 5  ? '0-5 años'
+                  : edad <= 10 ? '6-10 años'
+                  : edad <= 20 ? '11-20 años'
+                  : edad <= 30 ? '21-30 años'
+                  : 'Más de 30 años';
+      conteos[rango] = (conteos[rango] || 0) + 1;
+      total++;
+    });
+
+    const orden = ['0-5 años', '6-10 años', '11-20 años', '21-30 años', 'Más de 30 años'];
+    return orden
+      .filter(r => conteos[r])
+      .map(r => ({
+        categoria:  r,
+        n:          conteos[r],
+        porcentaje: parseFloat(((conteos[r] / total) * 100).toFixed(1))
+      }));
+  };
+
+  // Calcula la edad promedio y mediana de las compañías
+  const calcularStatsEdad = (filas) => {
+    if (!filas || !filas.length) return [undefined, undefined];
+    const colFecha = Object.keys(filas[0]).find(k =>
+      k.toLowerCase().includes('fecha') && k.toLowerCase().includes('registro')
+    ) || Object.keys(filas[0]).find(k =>
+      k.toLowerCase().includes('fecha') && k.toLowerCase().includes('juridic')
+    );
+    if (!colFecha) return [undefined, undefined];
+
+    const edades = filas.map(f => window.calcularEdad(f[colFecha])).filter(e => e !== null);
+    if (!edades.length) return [undefined, undefined];
+    const promedio = (edades.reduce((a, b) => a + b, 0) / edades.length).toFixed(1);
+    const mediana  = window.calcularMediana(edades).toFixed(1);
+    return [promedio, mediana];
+  };
+
+  const [promedioEdad, medianaEdad] = filas ? calcularStatsEdad(filas) : [undefined, undefined];
+
   return (
     <div>
       <div style={{ textAlign: 'center', margin: '20px 0' }}>
-        <label className="label-archivo"> {filas ? 'Cambiar' : 'Cargar'} Excel Organizaciones
+        <label className="label-archivo">
+          {filas ? 'Cambiar' : 'Cargar'} Excel Organizaciones
           <input type="file" accept=".xlsx,.xls" onChange={handleCarga} style={{ display: 'none' }} />
         </label>
       </div>
@@ -205,6 +257,9 @@ function OrgTab({ filas, setFilas }) {
           <SeccionAnalisis titulo="Género artístico" datos={procesarFrecuencias(filas, ["genero", "género"])} />
           <SeccionAnalisis titulo="Subgénero artístico" datos={procesarFrecuencias(filas, ["subgenero", "subgénero"])} />
           <SeccionAnalisis titulo="Compañías inclusivas" datos={procesarFrecuencias(filas, ["inclusiva", "inclusivo"])} />
+          <SeccionAnalisis titulo="Antigüedad de las compañías"
+            datos={calcularDistribucionEdades(filas)}
+            promedioCustom={promedioEdad} medianaCustom={medianaEdad} etiquetaCustom="años" />
           <SeccionAnalisis titulo="Redes sociales — por plataforma" datos={adaptar(window.analizarRedes(filas).tablaPorRed)} />
           <SeccionAnalisis titulo="Redes sociales — nº de redes por compañía" datos={adaptar(window.analizarRedes(filas).tablaPorNumero)} />
           <SeccionAnalisis titulo="Espacios — tipo" datos={adaptar(window.analizarEspacios(filas).tablaTipo)} />
@@ -214,6 +269,8 @@ function OrgTab({ filas, setFilas }) {
     </div>
   );
 }
+
+// --- PESTAÑA PRODUCCIONES ---
 
 function ProdTab({ filas, setFilas }) {
   const [cargando, setCargando] = useState(false);
@@ -237,21 +294,10 @@ function ProdTab({ filas, setFilas }) {
   let promedioDuracion    = undefined, medianaDuracion    = undefined;
 
   if (filas && filas.length > 0) {
-    const calcStats = (col) => {
-      const vals = filas.map(f => parseFloat(f[col])).filter(v => !isNaN(v) && v > 0);
-      if (!vals.length) return [undefined, undefined];
-      const avg    = (vals.reduce((a, b) => a + b, 0) / vals.length).toFixed(1);
-      const sorted = [...vals].sort((a, b) => a - b);
-      const mid    = Math.floor(sorted.length / 2);
-      const med    = sorted.length % 2 === 0
-        ? ((sorted[mid - 1] + sorted[mid]) / 2).toFixed(1)
-        : sorted[mid].toFixed(1);
-      return [avg, med];
-    };
-    [promedioInterpretes, medianaInterpretes] = calcStats('Numero de interpretes');
-    [promedioCoste,       medianaCoste]       = calcStats('Coste total');
-    [promedioCache,       medianaCache]       = calcStats('Cache medio');
-    [promedioDuracion,    medianaDuracion]    = calcStats('Duracion');
+    [promedioInterpretes, medianaInterpretes] = window.calcularStats(filas, 'Numero de interpretes');
+    [promedioCoste,       medianaCoste]       = window.calcularStats(filas, 'Coste total');
+    [promedioCache,       medianaCache]       = window.calcularStats(filas, 'Cache medio');
+    [promedioDuracion,    medianaDuracion]    = window.calcularStats(filas, 'Duracion');
   }
 
   return (
@@ -293,8 +339,11 @@ function ProdTab({ filas, setFilas }) {
   );
 }
 
+// --- PESTAÑA FUNCIONES ---
+
 function FuncionesTab({ filas, setFilas }) {
-  const [cargando, setCargando] = useState(false);
+  const [cargando,  setCargando]  = useState(false);
+  const [anioFiltro, setAnioFiltro] = useState("todos");
 
   const handleCarga = async (e) => {
     const file = e.target.files[0];
@@ -303,6 +352,7 @@ function FuncionesTab({ filas, setFilas }) {
     try {
       const data = await window.leerExcel(file);
       setFilas(data);
+      setAnioFiltro("todos");
     } catch (err) {
       console.error(err);
     }
@@ -319,50 +369,141 @@ function FuncionesTab({ filas, setFilas }) {
     return "Sin datos";
   };
 
-  let promedioIngresos = undefined, medianaIngresos = undefined;
+  // Detecta la columna de fecha de primera función. Prioriza la que combina
+  // 'fecha' con 'primera' o 'funcion'; si no la encuentra, usa la primera 'fecha'.
+  const detectarColFecha = (filas) => {
+    if (!filas || !filas.length) return null;
+    const claves = Object.keys(filas[0] || {});
+    return claves.find(k =>
+      k.toLowerCase().includes('fecha') && (k.toLowerCase().includes('primera') || k.toLowerCase().includes('funcion'))
+    ) || claves.find(k => k.toLowerCase().includes('fecha')) || null;
+  };
 
-  if (filas && filas.length > 0) {
-    const colIngresos = Object.keys(filas[0]).find(k =>
-      ["ingreso", "cache", "caché", "precio", "recaudacion", "importe"].some(p => k.toLowerCase().includes(p))
-    );
-    if (colIngresos) {
-      const valores = filas.map(f => parseFloat(f[colIngresos])).filter(v => !isNaN(v));
-      if (valores.length > 0) {
-        promedioIngresos = (valores.reduce((a, b) => a + b, 0) / valores.length).toFixed(2);
-        valores.sort((a, b) => a - b);
-        const mitad = Math.floor(valores.length / 2);
-        medianaIngresos = valores.length % 2 === 0
-          ? ((valores[mitad - 1] + valores[mitad]) / 2).toFixed(2)
-          : valores[mitad].toFixed(2);
-      }
+  // Obtiene todos los años presentes en el fichero para el selector de filtro
+  const obtenerAnios = (filas) => {
+    if (!filas) return [];
+    const colFecha = detectarColFecha(filas);
+    if (!colFecha) return [];
+
+    const anios = new Set();
+    filas.forEach(f => {
+      const a = window.extraerAnio(f[colFecha]);
+      if (a) anios.add(a);
+    });
+    return [...anios].sort((a, b) => a - b);
+  };
+
+  // Filtra las filas según el año seleccionado
+  const obtenerFilasFiltradas = (filas, anio) => {
+    if (!filas || anio === "todos") return filas;
+    const colFecha = detectarColFecha(filas);
+    if (!colFecha) return filas;
+    return filas.filter(f => String(window.extraerAnio(f[colFecha])) === String(anio));
+  };
+
+  const aniosDisponibles = filas ? obtenerAnios(filas) : [];
+  const filasFiltradas   = filas ? obtenerFilasFiltradas(filas, anioFiltro) : null;
+
+  // Calcula promedio y mediana de caché y taquilla por separado
+  const calcularStatsFunciones = (filas) => {
+    if (!filas || !filas.length) return {};
+    const colCache    = Object.keys(filas[0]).find(k => k.toLowerCase().includes('cache') || k.toLowerCase().includes('caché'));
+    const colTaquilla = Object.keys(filas[0]).find(k => k.toLowerCase().includes('taquilla'));
+
+    const stats = {};
+    if (colCache) {
+      const [prom, med] = window.calcularStats(filas, colCache);
+      stats.promedioCache   = prom;
+      stats.medianaCache    = med;
+      stats.colCache        = colCache;
     }
-  }
+    if (colTaquilla) {
+      const [prom, med] = window.calcularStats(filas, colTaquilla);
+      stats.promedioTaquilla = prom;
+      stats.medianaTaquilla  = med;
+      stats.colTaquilla      = colTaquilla;
+    }
+    return stats;
+  };
+
+  const statsFunc = filasFiltradas ? calcularStatsFunciones(filasFiltradas) : {};
+
+  // Convierte un importe (caché o taquilla) en su rango. Los valores vacíos o
+  // no numéricos se etiquetan como "Sin datos" para no inflar el rango más bajo.
+  const rangoIngreso = (v) => {
+    const n = parseFloat(v);
+    if (isNaN(n) || n <= 0) return "Sin datos";
+    return typeof window.rangoCache === 'function' ? window.rangoCache(n) : "Sin datos";
+  };
 
   return (
     <div>
       <div style={{ textAlign: 'center', margin: '20px 0' }}>
-        <label className="label-archivo"> {filas ? 'Cambiar' : 'Cargar'} Excel Funciones
+        <label className="label-archivo">
+          {filas ? 'Cambiar' : 'Cargar'} Excel Funciones
           <input type="file" accept=".xlsx,.xls" onChange={handleCarga} style={{ display: 'none' }} />
         </label>
       </div>
       {cargando && <p className="estado">Cargando datos...</p>}
-      {filas && (
+
+      {filas && aniosDisponibles.length > 1 && (
+        <div style={{ textAlign: 'center', margin: '0 0 24px 0' }}>
+          <div style={{ display: 'inline-flex', alignItems: 'center', gap: '10px', background: '#fff', border: '1px solid #E9ECEF', borderRadius: '10px', padding: '10px 20px' }}>
+            <span style={{ fontWeight: 600, fontSize: '0.9rem' }}>Filtrar por año:</span>
+            <select
+              value={anioFiltro}
+              onChange={e => setAnioFiltro(e.target.value)}
+              style={{ border: '1px solid #ccc', borderRadius: '6px', padding: '5px 10px', fontFamily: 'inherit', fontSize: '0.9rem', cursor: 'pointer' }}
+            >
+              <option value="todos">Todos los años ({filas.length} funciones)</option>
+              {aniosDisponibles.map(a => {
+                const count = filas.filter(f => {
+                  const colFecha = detectarColFecha(filas);
+                  return colFecha && String(window.extraerAnio(f[colFecha])) === String(a);
+                }).length;
+                return <option key={a} value={a}>{a} ({count} funciones)</option>;
+              })}
+            </select>
+          </div>
+        </div>
+      )}
+
+      {filasFiltradas && (
         <div className="resultado">
-          <SeccionAnalisis titulo="Funciones por Año" datos={procesarFrecuencias(filas, ["fecha", "año", "anio"], typeof window.extraerAnio === 'function' ? window.extraerAnio : null)} />
-          <SeccionAnalisis titulo="Distribución por Mes" datos={procesarFrecuencias(filas, ["fecha", "mes"], obtenerNombreMes)} />
-          <SeccionAnalisis titulo="Funciones por CCAA donde tienen lugar" datos={procesarFrecuencias(filas, ["ccaa", "comunidad"])} />
-          <SeccionAnalisis titulo="Funciones por Género" datos={procesarFrecuencias(filas, ["genero", "género"])} />
-          <SeccionAnalisis titulo="Funciones por Subgénero" datos={procesarFrecuencias(filas, ["subgenero", "subgénero"])} />
-          <SeccionAnalisis titulo="Funciones por Mercado (Interior / Exterior)" datos={procesarFrecuencias(filas, ["mercado", "pais", "país", "lugar"], typeof window.calcularMercado === 'function' ? window.calcularMercado : null)} />
-          <SeccionAnalisis titulo="Funciones por Región del Mundo" datos={procesarFrecuencias(filas, ["pais", "país", "region", "región"], typeof window.calcularRegion === 'function' ? window.calcularRegion : null)} />
-          <SeccionAnalisis titulo="Funciones por País" datos={procesarFrecuencias(filas, ["pais", "país", "nation"])} />
-          <SeccionAnalisis titulo="Sistema de Contratación" datos={procesarFrecuencias(filas, ["contratacion", "contratación", "sistema"])} />
-          <SeccionAnalisis titulo="Forma de Retribución" datos={procesarFrecuencias(filas, ["retribucion", "retribución", "pago", "forma de pago"])} />
-          <SeccionAnalisis
-            titulo="Rangos de Ingresos / Caché"
-            datos={procesarFrecuencias(filas, ["ingreso", "cache", "caché", "precio", "recaudacion", "importe"], (v) => typeof window.rangoCache === 'function' ? window.rangoCache(parseFloat(v) || 0) : null)}
-            promedioCustom={promedioIngresos} medianaCustom={medianaIngresos} etiquetaCustom="€"
-          />
+          <SeccionAnalisis titulo="Funciones por Año"
+            datos={procesarFrecuencias(filasFiltradas, [detectarColFecha(filasFiltradas) || "fecha"], typeof window.extraerAnio === 'function' ? window.extraerAnio : null)} />
+          <SeccionAnalisis titulo="Distribución por Mes"
+            datos={procesarFrecuencias(filasFiltradas, [detectarColFecha(filasFiltradas) || "fecha"], obtenerNombreMes)} />
+          <SeccionAnalisis titulo="Funciones por CCAA donde tienen lugar"
+            datos={procesarFrecuencias(filasFiltradas, ["ccaa", "comunidad"])} />
+          <SeccionAnalisis titulo="Misma CCAA o distinta a la de la compañía"
+            datos={procesarFrecuencias(filasFiltradas, ["distinta", "ccaa distinta", "comunidad distinta"], typeof window.calcularCcaaDistinta === 'function' ? window.calcularCcaaDistinta : null)} />
+          <SeccionAnalisis titulo="Funciones por Género"
+            datos={procesarFrecuencias(filasFiltradas, ["genero", "género"])} />
+          <SeccionAnalisis titulo="Funciones por Subgénero"
+            datos={procesarFrecuencias(filasFiltradas, ["subgenero", "subgénero"])} />
+          <SeccionAnalisis titulo="Tipo de espacio donde se realizan"
+            datos={adaptar(window.analizarEspaciosFunciones(filasFiltradas).tablaTipo)} />
+          <SeccionAnalisis titulo="Funciones por Mercado (Interior / Exterior)"
+            datos={procesarFrecuencias(filasFiltradas, ["pais", "país", "lugar"], typeof window.calcularMercado === 'function' ? window.calcularMercado : null)} />
+          <SeccionAnalisis titulo="Funciones por Región del Mundo"
+            datos={procesarFrecuencias(filasFiltradas, ["pais", "país", "region", "región"], typeof window.calcularRegion === 'function' ? window.calcularRegion : null)} />
+          <SeccionAnalisis titulo="Funciones por País"
+            datos={procesarFrecuencias(filasFiltradas, ["pais", "país", "nation"])} />
+          <SeccionAnalisis titulo="Sistema de Contratación"
+            datos={procesarFrecuencias(filasFiltradas, ["contratacion", "contratación", "sistema"])} />
+          <SeccionAnalisis titulo="Forma de Retribución"
+            datos={procesarFrecuencias(filasFiltradas, ["retribucion", "retribución", "forma de pago"])} />
+          {statsFunc.colCache && (
+            <SeccionAnalisis titulo="Rangos de ingresos por Caché"
+              datos={procesarFrecuencias(filasFiltradas, [statsFunc.colCache], rangoIngreso)}
+              promedioCustom={statsFunc.promedioCache} medianaCustom={statsFunc.medianaCache} etiquetaCustom="€" />
+          )}
+          {statsFunc.colTaquilla && (
+            <SeccionAnalisis titulo="Rangos de ingresos por Taquilla"
+              datos={procesarFrecuencias(filasFiltradas, [statsFunc.colTaquilla], rangoIngreso)}
+              promedioCustom={statsFunc.promedioTaquilla} medianaCustom={statsFunc.medianaTaquilla} etiquetaCustom="€" />
+          )}
         </div>
       )}
     </div>
@@ -372,11 +513,11 @@ function FuncionesTab({ filas, setFilas }) {
 // --- COMPONENTE PRINCIPAL ---
 
 function App() {
-  const [tabActiva,   setTabActiva]  = useState("org");
-  const [utilsListo,  setUtilsListo] = useState(false);
-  const [dataOrg,     setDataOrg]    = useState(null);
-  const [dataProd,    setDataProd]   = useState(null);
-  const [dataFunc,    setDataFunc]   = useState(null);
+  const [tabActiva,  setTabActiva]  = useState("org");
+  const [utilsListo, setUtilsListo] = useState(false);
+  const [dataOrg,    setDataOrg]    = useState(null);
+  const [dataProd,   setDataProd]   = useState(null);
+  const [dataFunc,   setDataFunc]   = useState(null);
 
   useEffect(() => {
     fetch('utils.js')
